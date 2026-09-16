@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v9.1 (Stable - Fixed Crash)
+-- ⚡ RYZHUB | v10.0 (Final Stable Edition)
 -- by mikey
 -- ============================================================
 
@@ -290,7 +290,7 @@ CreateSlider(MiscColumn, "FOV Radius", 50, 500, 150, 105, function(v) Config.FOV
 CreateSlider(MiscColumn, "Aim Range", 50, 500, 300, 140, function(v) Config.AimRange = v end)
 
 -- ============================================================
--- 6. محتوى تبويب Whitelist (مع ScrollingFrame)
+-- 6. محتوى تبويب Whitelist
 -- ============================================================
 local WhitelistScroll = Instance.new("ScrollingFrame")
 WhitelistScroll.Size = UDim2.new(1, -20, 1, -40)
@@ -308,14 +308,10 @@ WhitelistList.SortOrder = Enum.SortOrder.Name
 WhitelistList.Parent = WhitelistScroll
 
 local function RefreshPlayerList()
-    -- مسح القائمة
     for _, child in ipairs(WhitelistScroll:GetChildren()) do
-        if child:IsA("TextButton") then
-            child:Destroy()
-        end
+        if child:IsA("TextButton") then child:Destroy() end
     end
     
-    -- إضافة اللاعبين
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
             local btn = Instance.new("TextButton")
@@ -349,7 +345,6 @@ end
 
 RefreshPlayerList()
 
--- زر التحديث
 local RefreshBtn = Instance.new("TextButton")
 RefreshBtn.Size = UDim2.new(1, -20, 0, 25)
 RefreshBtn.Position = UDim2.new(0, 10, 1, -30)
@@ -368,16 +363,15 @@ rbc.Parent = RefreshBtn
 RefreshBtn.MouseButton1Click:Connect(RefreshPlayerList)
 
 -- ============================================================
--- 7. Floating Button
+-- 7. Floating Button (بالصورة الجديدة)
 -- ============================================================
-local FloatingBtn = Instance.new("TextButton")
+local FloatingBtn = Instance.new("ImageButton")
+FloatingBtn.Name = "FloatingButton"
 FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
 FloatingBtn.Position = UDim2.new(0, 20, 0.5, -25)
 FloatingBtn.BackgroundColor3 = Color3.fromRGB(153, 68, 255)
-FloatingBtn.Text = "⚡"
-FloatingBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-FloatingBtn.TextSize = 24
-FloatingBtn.Font = Enum.Font.GothamBold
+FloatingBtn.Image = "rbxassetid://11270029456" -- الأيقونة البنفسجية مع البرق
+FloatingBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 FloatingBtn.BorderSizePixel = 0
 FloatingBtn.ZIndex = 1000
 FloatingBtn.Parent = ScreenGui
@@ -415,7 +409,7 @@ FloatingBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 8. FOV Circle
+-- 8. FOV Circle (سريع - RenderStepped)
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
@@ -431,16 +425,25 @@ fovCorner.Parent = FOVFrame
 
 local fovStroke = Instance.new("UIStroke")
 fovStroke.Color = Color3.fromRGB(153, 68, 255)
-fovStroke.Thickness = 1.5
+fovStroke.Thickness = 2
 fovStroke.Parent = FOVFrame
 
--- ============================================================
--- 9. ESP Folder
--- ============================================================
-local ESPFolder = Instance.new("Folder")
-ESPFolder.Name = "RyzHubESP"
-ESPFolder.Parent = ScreenGui
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.ShowFOV and FOVFrame then
+            FOVFrame.Visible = true
+            local mouse = UserInputService:GetMouseLocation()
+            FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
+            FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
+        elseif FOVFrame then
+            FOVFrame.Visible = false
+        end
+    end)
+end)
 
+-- ============================================================
+-- 9. ESP (محسّن - يظهر فوق اللاعبين)
+-- ============================================================
 local espCache = {}
 
 local function CreateESP(player)
@@ -450,34 +453,38 @@ local function CreateESP(player)
     if not head then return end
     
     local billboard = Instance.new("BillboardGui")
-    billboard.Name = player.Name
-    billboard.Size = UDim2.new(0, 120, 0, 40)
-    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.Name = "RyzESP_" .. player.Name
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
+    billboard.LightInfluence = false
+    billboard.MaxDistance = 1000
     billboard.Adornee = head
-    billboard.Parent = ESPFolder
+    billboard.Parent = head  -- ✅ Parent على الرأس مباشرة
     
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Name = "NameLabel"
-    nameLabel.Size = UDim2.new(1, 0, 0, 20)
+    nameLabel.Size = UDim2.new(1, 0, 0, 25)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = player.Name
     nameLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-    nameLabel.TextSize = 12
+    nameLabel.TextSize = 14
     nameLabel.Font = Enum.Font.GothamBold
     nameLabel.TextStrokeTransparency = 0
+    nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     nameLabel.Parent = billboard
     
     local distLabel = Instance.new("TextLabel")
     distLabel.Name = "DistLabel"
     distLabel.Size = UDim2.new(1, 0, 0, 20)
-    distLabel.Position = UDim2.new(0, 0, 0, 20)
+    distLabel.Position = UDim2.new(0, 0, 0, 25)
     distLabel.BackgroundTransparency = 1
     distLabel.Text = "0m"
     distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    distLabel.TextSize = 10
-    distLabel.Font = Enum.Font.Gotham
+    distLabel.TextSize = 12
+    distLabel.Font = Enum.Font.GothamBold
     distLabel.TextStrokeTransparency = 0
+    distLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     distLabel.Parent = billboard
     
     espCache[player] = billboard
@@ -491,22 +498,11 @@ local function RemoveESP(player)
 end
 
 -- ============================================================
--- 10. الحلقة الرئيسية (محمية بـ pcall)
+-- 10. حلقة ESP
 -- ============================================================
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
         pcall(function()
-            -- FOV Circle
-            if Config.ShowFOV then
-                FOVFrame.Visible = true
-                local mouse = UserInputService:GetMouseLocation()
-                FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
-                FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
-            else
-                FOVFrame.Visible = false
-            end
-            
-            -- Noclip
             if Config.Noclip then
                 local char = LocalPlayer.Character
                 if char then
@@ -518,7 +514,6 @@ task.spawn(function()
                 end
             end
             
-            -- ESP
             if Config.ESP then
                 for _, p in ipairs(Players:GetPlayers()) do
                     if not IsWhitelisted(p) and p.Character then
@@ -534,9 +529,7 @@ task.spawn(function()
                         if myChar and myChar:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("HumanoidRootPart") then
                             local dist = (myChar.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
                             local distLabel = gui:FindFirstChild("DistLabel")
-                            if distLabel then
-                                distLabel.Text = math.floor(dist) .. "m"
-                            end
+                            if distLabel then distLabel.Text = math.floor(dist) .. "m" end
                         end
                     end
                 end
@@ -546,7 +539,7 @@ task.spawn(function()
                 end
             end
         end)
-        task.wait(0.15)
+        task.wait(0.2)
     end
 end)
 
@@ -577,20 +570,49 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 -- ============================================================
--- 12. اختصارات الكيبورد
+-- 12. F4 (إخفاء) + F7 (إغلاق كامل)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
+    
+    -- F4: إخفاء / إظهار
     if input.KeyCode == Enum.KeyCode.F4 then
         MainFrame.Visible = not MainFrame.Visible
+        FloatingBtn.Visible = not FloatingBtn.Visible
     end
+    
+    -- F7: إغلاق السكربت بالكامل
     if input.KeyCode == Enum.KeyCode.F7 then
+        print("[RyzHub] Shutting down...")
+        
+        -- إيقاف جميع الميزات
         Config.SilentAim = false
         Config.ESP = false
         Config.ShowFOV = false
         Config.Noclip = false
-        if ScreenGui then ScreenGui:Destroy() end
+        Config.AutoFlash = false
+        
+        -- إزالة ESP
+        for player, gui in pairs(espCache) do
+            if gui then gui:Destroy() end
+        end
+        espCache = {}
+        
+        -- إعادة WalkSpeed الافتراضي
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+        
+        -- تدمير الواجهة بالكامل
+        if ScreenGui then
+            ScreenGui:Destroy()
+            ScreenGui = nil
+        end
+        
+        -- إعادة العلم
         getgenv().RyzHubLoaded = false
+        
+        print("[RyzHub] Script terminated successfully!")
     end
 end)
 
@@ -599,10 +621,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v9.1",
-        Text = "Loaded! Whitelist active.",
+        Title = "⚡ RyzHub v10.0",
+        Text = "Loaded! Press F7 to terminate.",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v9.1 Loaded successfully!")
+print("[RyzHub] v10.0 Loaded successfully!")
