@@ -1,8 +1,7 @@
 -- ============================================================
--- ⚡ RYZHUB | v4.5 (Fixed for Xeno)
+-- ⚡ RYZHUB | v5.0 (Rayfield UI)
 -- by mikey
 -- Silent Aim + ESP + Speed + Noclip + Aimbot + FOV + Discord
--- F4: Hide UI | F7: Close Script
 -- ============================================================
 
 print("[RyzHub] Loading...")
@@ -17,7 +16,12 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ============================================================
--- 1. الإعدادات
+-- 1. تحميل Rayfield UI
+-- ============================================================
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- ============================================================
+-- 2. الإعدادات
 -- ============================================================
 local Config = {
     SilentAim = false,
@@ -29,277 +33,157 @@ local Config = {
     AimRange = 300,
     Smoothness = 0.5,
     Speed = 16,
-    AccentColor = Color3.fromRGB(153, 68, 255),
 }
 
 -- ============================================================
--- 2. الواجهة الرئيسية
+-- 3. إنشاء النافذة
 -- ============================================================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "RyzHubUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 320, 0, 520)
-MainFrame.Position = UDim2.new(0, 20, 0.5, -260)
-MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = MainFrame
-
-local stroke = Instance.new("UIStroke")
-stroke.Color = Config.AccentColor
-stroke.Thickness = 1.5
-stroke.Parent = MainFrame
-
--- شريط العنوان
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
-Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "⚡ RYZHUB v4.5"
-Title.TextColor3 = Config.AccentColor
-Title.TextSize = 16
-Title.Font = Enum.Font.GothamBold
-Title.BorderSizePixel = 0
-Title.Parent = MainFrame
-
-local tc = Instance.new("UICorner")
-tc.CornerRadius = UDim.new(0, 10)
-tc.Parent = Title
-
--- حقوق mikey
-local Credits = Instance.new("TextLabel")
-Credits.Size = UDim2.new(1, 0, 0, 18)
-Credits.Position = UDim2.new(0, 0, 0, 35)
-Credits.BackgroundTransparency = 1
-Credits.Text = "by mikey"
-Credits.TextColor3 = Color3.fromRGB(150, 150, 150)
-Credits.TextSize = 10
-Credits.Font = Enum.Font.GothamItalic
-Credits.Parent = MainFrame
-
--- زر الإغلاق
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0, 25, 0, 25)
-CloseBtn.Position = UDim2.new(1, -35, 0, 5)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-CloseBtn.Text = "×"
-CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.TextSize = 18
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.BorderSizePixel = 0
-CloseBtn.Parent = MainFrame
-
-local cc = Instance.new("UICorner")
-cc.CornerRadius = UDim.new(0, 6)
-cc.Parent = CloseBtn
-
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-    if ESPFolder then ESPFolder:Destroy() end
-    getgenv().RyzHubLoaded = false
-end)
+local Window = Rayfield:CreateWindow({
+    Name = "⚡ RYZHUB v5.0 | by mikey",
+    LoadingTitle = "RyzHub Loading...",
+    LoadingSubtitle = "by mikey",
+    ConfigurationSaving = {
+        Enabled = false,
+    },
+    Discord = {
+        Enabled = false,
+    },
+    KeySystem = false,
+})
 
 -- ============================================================
--- 3. دالة Toggle (بإحداثيات ثابتة)
+-- 4. التبويبات
 -- ============================================================
-local BaseY = 60
+local MainTab = Window:CreateTab("Main", nil)
 
-local function CreateToggle(text, yPos, callback)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -20, 0, 32)
-    frame.Position = UDim2.new(0, 10, 0, yPos)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    frame.BorderSizePixel = 0
-    frame.Parent = MainFrame
+-- Silent Aim
+MainTab:CreateToggle({
+    Name = "Silent Aim",
+    CurrentValue = false,
+    Flag = "SilentAim",
+    Callback = function(Value)
+        Config.SilentAim = Value
+    end,
+})
 
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = frame
+-- Aimbot
+MainTab:CreateToggle({
+    Name = "Aimbot",
+    CurrentValue = false,
+    Flag = "Aimbot",
+    Callback = function(Value)
+        Config.Aimbot = Value
+    end,
+})
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -60, 1, 0)
-    label.Position = UDim2.new(0, 8, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(220, 220, 220)
-    label.TextSize = 12
-    label.Font = Enum.Font.GothamBold
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
+-- Show FOV
+MainTab:CreateToggle({
+    Name = "Show FOV Circle",
+    CurrentValue = false,
+    Flag = "ShowFOV",
+    Callback = function(Value)
+        Config.ShowFOV = Value
+        if FOVFrame then FOVFrame.Visible = Value end
+    end,
+})
 
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 36, 0, 18)
-    btn.Position = UDim2.new(1, -44, 0.5, -9)
-    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-    btn.Text = ""
-    btn.BorderSizePixel = 0
-    btn.Parent = frame
-
-    local bc = Instance.new("UICorner")
-    bc.CornerRadius = UDim.new(0, 9)
-    bc.Parent = btn
-
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0, 14, 0, 14)
-    knob.Position = UDim2.new(0, 2, 0.5, -7)
-    knob.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
-    knob.BorderSizePixel = 0
-    knob.Parent = btn
-
-    local kc = Instance.new("UICorner")
-    kc.CornerRadius = UDim.new(1, 0)
-    kc.Parent = knob
-
-    local state = false
-    btn.MouseButton1Click:Connect(function()
-        state = not state
-        if state then
-            btn.BackgroundColor3 = Config.AccentColor
-            knob.Position = UDim2.new(1, -16, 0.5, -7)
-        else
-            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-            knob.Position = UDim2.new(0, 2, 0.5, -7)
+-- ESP
+MainTab:CreateToggle({
+    Name = "Player ESP",
+    CurrentValue = false,
+    Flag = "ESP",
+    Callback = function(Value)
+        Config.ESP = Value
+        if not Value then
+            for _, v in pairs(ESPFolder:GetChildren()) do
+                v:Destroy()
+            end
         end
-        callback(state)
-    end)
-end
+    end,
+})
 
--- ============================================================
--- 4. دالة Slider (بإحداثيات ثابتة)
--- ============================================================
-local function CreateSlider(text, minVal, maxVal, default, yPos, callback)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -20, 0, 45)
-    frame.Position = UDim2.new(0, 10, 0, yPos)
-    frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    frame.BorderSizePixel = 0
-    frame.Parent = MainFrame
+-- Noclip
+MainTab:CreateToggle({
+    Name = "Noclip",
+    CurrentValue = false,
+    Flag = "Noclip",
+    Callback = function(Value)
+        Config.Noclip = Value
+    end,
+})
 
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = frame
+-- FOV Radius
+MainTab:CreateSlider({
+    Name = "FOV Radius",
+    Range = {50, 500},
+    Increment = 1,
+    Suffix = "px",
+    CurrentValue = 150,
+    Flag = "FOVRadius",
+    Callback = function(Value)
+        Config.FOVRadius = Value
+    end,
+})
 
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -60, 0, 20)
-    label.Position = UDim2.new(0, 8, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(220, 220, 220)
-    label.TextSize = 12
-    label.Font = Enum.Font.GothamBold
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
+-- Aim Range
+MainTab:CreateSlider({
+    Name = "Aim Range",
+    Range = {50, 500},
+    Increment = 1,
+    Suffix = "studs",
+    CurrentValue = 300,
+    Flag = "AimRange",
+    Callback = function(Value)
+        Config.AimRange = Value
+    end,
+})
 
-    local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0, 40, 0, 20)
-    valueLabel.Position = UDim2.new(1, -50, 0, 0)
-    valueLabel.BackgroundTransparency = 1
-    valueLabel.Text = tostring(default)
-    valueLabel.TextColor3 = Config.AccentColor
-    valueLabel.TextSize = 12
-    valueLabel.Font = Enum.Font.GothamBold
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    valueLabel.Parent = frame
+-- Smoothness
+MainTab:CreateSlider({
+    Name = "Smoothness",
+    Range = {0, 10},
+    Increment = 1,
+    Suffix = "",
+    CurrentValue = 5,
+    Flag = "Smoothness",
+    Callback = function(Value)
+        Config.Smoothness = Value / 10
+    end,
+})
 
-    local sliderBg = Instance.new("Frame")
-    sliderBg.Size = UDim2.new(1, -16, 0, 5)
-    sliderBg.Position = UDim2.new(0, 8, 0, 30)
-    sliderBg.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-    sliderBg.BorderSizePixel = 0
-    sliderBg.Parent = frame
-
-    local sbc = Instance.new("UICorner")
-    sbc.CornerRadius = UDim.new(1, 0)
-    sbc.Parent = sliderBg
-
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new((default - minVal) / (maxVal - minVal), 0, 1, 0)
-    fill.BackgroundColor3 = Config.AccentColor
-    fill.BorderSizePixel = 0
-    fill.Parent = sliderBg
-
-    local fc = Instance.new("UICorner")
-    fc.CornerRadius = UDim.new(1, 0)
-    fc.Parent = fill
-
-    local dragging = false
-    sliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
+-- Walk Speed
+MainTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = {16, 200},
+    Increment = 1,
+    Suffix = "speed",
+    CurrentValue = 16,
+    Flag = "WalkSpeed",
+    Callback = function(Value)
+        Config.Speed = Value
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = Value
         end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local mouseX = input.Position.X - sliderBg.AbsolutePosition.X
-            local percent = math.clamp(mouseX / sliderBg.AbsoluteSize.X, 0, 1)
-            fill.Size = UDim2.new(percent, 0, 1, 0)
-            local val = math.floor(minVal + (maxVal - minVal) * percent)
-            valueLabel.Text = tostring(val)
-            callback(val)
-        end
-    end)
-end
+    end,
+})
 
--- ============================================================
--- 5. إنشاء العناصر (بترتيب يدوي)
--- ============================================================
-CreateToggle("Silent Aim", BaseY, function(v) Config.SilentAim = v end)
-CreateToggle("Aimbot", BaseY + 37, function(v) Config.Aimbot = v end)
-CreateToggle("Show FOV Circle", BaseY + 74, function(v) Config.ShowFOV = v end)
-CreateToggle("Player ESP", BaseY + 111, function(v) Config.ESP = v end)
-CreateToggle("Noclip", BaseY + 148, function(v) Config.Noclip = v end)
-
-CreateSlider("FOV Radius", 50, 500, 150, BaseY + 190, function(v) Config.FOVRadius = v end)
-CreateSlider("Aim Range", 50, 500, 300, BaseY + 240, function(v) Config.AimRange = v end)
-CreateSlider("Smoothness", 0, 10, 5, BaseY + 290, function(v) Config.Smoothness = v / 10 end)
-CreateSlider("Walk Speed", 16, 200, 16, BaseY + 340, function(v)
-    Config.Speed = v
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = v
-    end
-end)
-
--- زر Discord
-local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(1, -20, 0, 32)
-DiscordBtn.Position = UDim2.new(0, 10, 0, BaseY + 395)
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
-DiscordBtn.Text = "💬 Join Discord"
-DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DiscordBtn.TextSize = 12
-DiscordBtn.Font = Enum.Font.GothamBold
-DiscordBtn.BorderSizePixel = 0
-DiscordBtn.Parent = MainFrame
-
-local dbc = Instance.new("UICorner")
-dbc.CornerRadius = UDim.new(0, 6)
-dbc.Parent = DiscordBtn
-
-DiscordBtn.MouseButton1Click:Connect(function()
-    pcall(function() setclipboard("https://discord.gg/UFMmHU95p4") end)
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
+-- Discord Button
+MainTab:CreateButton({
+    Name = "💬 Join Discord",
+    Callback = function()
+        pcall(function()
+            setclipboard("https://discord.gg/UFMmHU95p4")
+        end)
+        Rayfield:Notify({
             Title = "💬 Discord",
-            Text = "Link copied!",
-            Duration = 3
+            Content = "Link copied to clipboard!",
+            Duration = 3,
         })
-    end)
-end)
+    end,
+})
 
 -- ============================================================
--- 6. FOV Circle
+-- 5. FOV Circle
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Name = "FOVCircle"
@@ -308,26 +192,26 @@ FOVFrame.Position = UDim2.new(0.5, -Config.FOVRadius, 0.5, -Config.FOVRadius)
 FOVFrame.BackgroundTransparency = 1
 FOVFrame.BorderSizePixel = 0
 FOVFrame.Visible = false
-FOVFrame.Parent = ScreenGui
+FOVFrame.Parent = game:GetService("CoreGui")
 
 local fovCorner = Instance.new("UICorner")
 fovCorner.CornerRadius = UDim.new(1, 0)
 fovCorner.Parent = FOVFrame
 
 local fovStroke = Instance.new("UIStroke")
-fovStroke.Color = Config.AccentColor
+fovStroke.Color = Color3.fromRGB(153, 68, 255)
 fovStroke.Thickness = 1.5
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 7. ESP Folder
+-- 6. ESP Folder
 -- ============================================================
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "RyzHubESP"
-ESPFolder.Parent = ScreenGui
+ESPFolder.Parent = game:GetService("CoreGui")
 
 -- ============================================================
--- 8. Silent Aim / Aimbot Engine
+-- 7. Silent Aim Engine
 -- ============================================================
 local function GetClosestEnemy()
     local char = LocalPlayer.Character
@@ -360,7 +244,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 9. ESP
+-- 8. ESP
 -- ============================================================
 local espCache = {}
 
@@ -403,7 +287,7 @@ local function CreateESP(player)
 end
 
 -- ============================================================
--- 10. الحلقة الرئيسية
+-- 9. الحلقة الرئيسية
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     if Config.SilentAim or Config.Aimbot then
@@ -461,47 +345,12 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 11. اختصارات لوحة المفاتيح (F4 للإخفاء، F7 للإغلاق)
+-- 10. إشعار
 -- ============================================================
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
-    if input.KeyCode == Enum.KeyCode.F4 then
-        if MainFrame then
-            MainFrame.Visible = not MainFrame.Visible
-        end
-    end
-    
-    if input.KeyCode == Enum.KeyCode.F7 then
-        Config.SilentAim = false
-        Config.Aimbot = false
-        Config.ESP = false
-        Config.ShowFOV = false
-        Config.Noclip = false
-        if ScreenGui then ScreenGui:Destroy() end
-        if ESPFolder then ESPFolder:Destroy() end
-        if FOVFrame then FOVFrame:Destroy() end
-        getgenv().RyzHubLoaded = false
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "⚡ RyzHub",
-                Text = "Script closed.",
-                Duration = 2
-            })
-        end)
-    end
-end)
+Rayfield:Notify({
+    Title = "⚡ RyzHub v5.0",
+    Content = "Loaded! by mikey",
+    Duration = 5,
+})
 
--- ============================================================
--- 12. إشعار
--- ============================================================
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v4.5",
-        Text = "Loaded! F4=Hide, F7=Close",
-        Duration = 5
-    })
-end)
-
-print("[RyzHub] v4.5 Loaded successfully! | by mikey")
-print("[RyzHub] Press F4 to hide UI, F7 to close.")
+print("[RyzHub] v5.0 Loaded successfully! | by mikey")
