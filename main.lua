@@ -1,8 +1,11 @@
 -- ============================================================
--- ⚡ RYZHUB | v3.1
+-- ⚡ RYZHUB | v3.3 (Universal)
 -- by mikey
--- Silent Aim + FOV + ESP + Discord + Color Changer
+-- Silent Aim + FOV + ESP + Speed
+-- متوافق مع: Real, Delta, Xeno, Solara, Wave
 -- ============================================================
+
+print("[RyzHub] Loading...")
 
 if getgenv().RyzHubLoaded then return end
 getgenv().RyzHubLoaded = true
@@ -14,7 +17,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ============================================================
--- 1. الإعدادات
+-- الإعدادات
 -- ============================================================
 local Config = {
     SilentAim = false,
@@ -23,21 +26,21 @@ local Config = {
     FOVRadius = 150,
     AimRange = 300,
     Smoothness = 0.5,
+    Speed = 16,
     AccentColor = Color3.fromRGB(153, 68, 255),
 }
 
 -- ============================================================
--- 2. الواجهة
+-- الواجهة
 -- ============================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RyzHubUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- الإطار الرئيسي
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 420, 0, 540)
-MainFrame.Position = UDim2.new(0.5, -210, 0.5, -270)
+MainFrame.Size = UDim2.new(0, 420, 0, 520)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -260)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -53,11 +56,11 @@ stroke.Color = Config.AccentColor
 stroke.Thickness = 1.5
 stroke.Parent = MainFrame
 
--- شريط العنوان
+-- العنوان
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "⚡ RYZHUB v3.1"
+Title.Text = "⚡ RYZHUB v3.3"
 Title.TextColor3 = Config.AccentColor
 Title.TextSize = 18
 Title.Font = Enum.Font.GothamBold
@@ -97,13 +100,12 @@ cc.Parent = CloseBtn
 
 CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
-    if FOVCircle then FOVCircle:Remove() end
     if ESPFolder then ESPFolder:Destroy() end
     getgenv().RyzHubLoaded = false
 end)
 
 -- ============================================================
--- 3. دوال Toggle
+-- دوال Toggle
 -- ============================================================
 local function CreateToggle(text, yPos, callback)
     local frame = Instance.new("Frame")
@@ -166,7 +168,7 @@ local function CreateToggle(text, yPos, callback)
 end
 
 -- ============================================================
--- 4. دوال Slider
+-- دوال Slider
 -- ============================================================
 local function CreateSlider(text, minVal, maxVal, default, yPos, callback)
     local frame = Instance.new("Frame")
@@ -225,17 +227,17 @@ local function CreateSlider(text, minVal, maxVal, default, yPos, callback)
 
     local dragging = false
     sliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
         end
     end)
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local mouseX = input.Position.X - sliderBg.AbsolutePosition.X
             local percent = math.clamp(mouseX / sliderBg.AbsoluteSize.X, 0, 1)
             fill.Size = UDim2.new(percent, 0, 1, 0)
@@ -247,111 +249,61 @@ local function CreateSlider(text, minVal, maxVal, default, yPos, callback)
 end
 
 -- ============================================================
--- 5. العناصر
+-- العناصر
 -- ============================================================
 CreateToggle("Silent Aim", 70, function(v) Config.SilentAim = v end)
-CreateToggle("Show FOV Circle", 110, function(v)
-    Config.ShowFOV = v
-    if FOVCircle then FOVCircle.Visible = v end
-end)
-CreateToggle("Player ESP", 150, function(v)
-    Config.ESP = v
-    if not v then
-        for _, esp in pairs(ESPFolder:GetChildren()) do
-            esp:Destroy()
-        end
-    end
-end)
+CreateToggle("Show FOV Circle", 110, function(v) Config.ShowFOV = v end)
+CreateToggle("Player ESP", 150, function(v) Config.ESP = v end)
 
 CreateSlider("FOV Radius", 50, 500, 150, 190, function(v)
     Config.FOVRadius = v
-    if FOVCircle then FOVCircle.Radius = v end
 end)
 
 CreateSlider("Aim Range", 50, 500, 300, 250, function(v)
     Config.AimRange = v
 end)
 
-CreateSlider("Smoothness", 0, 10, 5, 310, function(v)
-    Config.Smoothness = v / 10
-end)
-
--- ============================================================
--- 6. FOV Circle
--- ============================================================
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Thickness = 1.5
-FOVCircle.NumSides = 60
-FOVCircle.Radius = Config.FOVRadius
-FOVCircle.Color = Config.AccentColor
-FOVCircle.Filled = false
-FOVCircle.Visible = false
-
-RunService.RenderStepped:Connect(function()
-    if FOVCircle then
-        FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+CreateSlider("Walk Speed", 16, 200, 16, 310, function(v)
+    Config.Speed = v
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = v
     end
 end)
 
 -- ============================================================
--- 7. ESP Folder
+-- FOV Circle (باستخدام Frame - متوافق مع جميع المحركات)
+-- ============================================================
+local FOVFrame = Instance.new("Frame")
+FOVFrame.Name = "FOVCircle"
+FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
+FOVFrame.Position = UDim2.new(0.5, -Config.FOVRadius, 0.5, -Config.FOVRadius)
+FOVFrame.BackgroundTransparency = 1
+FOVFrame.BorderSizePixel = 0
+FOVFrame.Visible = false
+FOVFrame.Parent = ScreenGui
+
+local fovCorner = Instance.new("UICorner")
+fovCorner.CornerRadius = UDim.new(1, 0)
+fovCorner.Parent = FOVFrame
+
+local fovStroke = Instance.new("UIStroke")
+fovStroke.Color = Config.AccentColor
+fovStroke.Thickness = 1.5
+fovStroke.Parent = FOVFrame
+
+-- ============================================================
+-- ESP Folder
 -- ============================================================
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "RyzHubESP"
 ESPFolder.Parent = ScreenGui
 
 -- ============================================================
--- 8. نظام تغيير الألوان
--- ============================================================
-local function ChangeAccentColor(color)
-    Config.AccentColor = color
-    stroke.Color = color
-    Title.TextColor3 = color
-    if FOVCircle then FOVCircle.Color = color end
-end
-
--- زر تغيير اللون
-local ColorBtn = Instance.new("TextButton")
-ColorBtn.Size = UDim2.new(1, -20, 0, 35)
-ColorBtn.Position = UDim2.new(0, 10, 0, 370)
-ColorBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-ColorBtn.Text = "🎨 Change Color"
-ColorBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
-ColorBtn.TextSize = 13
-ColorBtn.Font = Enum.Font.GothamBold
-ColorBtn.BorderSizePixel = 0
-ColorBtn.Parent = MainFrame
-
-local cbc = Instance.new("UICorner")
-cbc.CornerRadius = UDim.new(0, 6)
-cbc.Parent = ColorBtn
-
--- قائمة الألوان
-local colorList = {
-    {name = "Purple", color = Color3.fromRGB(153, 68, 255)},
-    {name = "Blue", color = Color3.fromRGB(0, 150, 255)},
-    {name = "Red", color = Color3.fromRGB(255, 50, 50)},
-    {name = "Green", color = Color3.fromRGB(50, 255, 100)},
-    {name = "Orange", color = Color3.fromRGB(255, 150, 0)},
-    {name = "Pink", color = Color3.fromRGB(255, 50, 150)},
-    {name = "Cyan", color = Color3.fromRGB(0, 255, 255)},
-    {name = "White", color = Color3.fromRGB(255, 255, 255)},
-}
-local colorIndex = 1
-
-ColorBtn.MouseButton1Click:Connect(function()
-    colorIndex = colorIndex % #colorList + 1
-    local newColor = colorList[colorIndex]
-    ChangeAccentColor(newColor.color)
-    ColorBtn.Text = "🎨 Color: " .. newColor.name
-end)
-
--- ============================================================
--- 9. زر Discord
+-- زر Discord
 -- ============================================================
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(1, -20, 0, 35)
-DiscordBtn.Position = UDim2.new(0, 10, 0, 415)
+DiscordBtn.Position = UDim2.new(0, 10, 0, 370)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
 DiscordBtn.Text = "💬 Join Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -366,35 +318,19 @@ dbc.Parent = DiscordBtn
 
 DiscordBtn.MouseButton1Click:Connect(function()
     pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "💬 Discord",
-            Text = "Copied link! Opening Discord...",
-            Duration = 3
-        })
-    end)
-    pcall(function()
         setclipboard("https://discord.gg/UFMmHU95p4")
     end)
     pcall(function()
-        game:GetService("GuiService"):OpenInBrowser("https://discord.gg/UFMmHU95p4")
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "💬 Discord",
+            Text = "Link copied! Join us!",
+            Duration = 3
+        })
     end)
 end)
 
 -- ============================================================
--- 10. حقوق mikey في الأسفل
--- ============================================================
-local Footer = Instance.new("TextLabel")
-Footer.Size = UDim2.new(1, 0, 0, 25)
-Footer.Position = UDim2.new(0, 0, 1, -30)
-Footer.BackgroundTransparency = 1
-Footer.Text = "⚡ RyzHub | Made by mikey"
-Footer.TextColor3 = Color3.fromRGB(150, 150, 150)
-Footer.TextSize = 11
-Footer.Font = Enum.Font.Gotham
-Footer.Parent = MainFrame
-
--- ============================================================
--- 11. Silent Aim Engine
+-- Silent Aim Engine
 -- ============================================================
 local function GetClosestEnemy()
     local char = LocalPlayer.Character
@@ -428,7 +364,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 12. ESP
+-- ESP
 -- ============================================================
 local espCache = {}
 
@@ -436,9 +372,8 @@ local function CreateESP(player)
     if espCache[player] then return end
     local char = player.Character
     if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
     local head = char:FindFirstChild("Head")
-    if not hrp or not head then return end
+    if not head then return end
 
     local billboard = Instance.new("BillboardGui")
     billboard.Name = player.Name
@@ -472,7 +407,7 @@ local function CreateESP(player)
 end
 
 -- ============================================================
--- 13. الحلقة الرئيسية
+-- الحلقة الرئيسية
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     -- Silent Aim
@@ -484,6 +419,13 @@ RunService.RenderStepped:Connect(function()
             local lookAt = CFrame.lookAt(cameraPos, targetPos)
             Camera.CFrame = Camera.CFrame:Lerp(lookAt, Config.Smoothness)
         end
+    end
+
+    -- FOV Circle
+    if FOVFrame then
+        FOVFrame.Visible = Config.ShowFOV
+        FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
+        FOVFrame.Position = UDim2.new(0.5, -Config.FOVRadius, 0.5, -Config.FOVRadius)
     end
 
     -- ESP
@@ -506,18 +448,23 @@ RunService.RenderStepped:Connect(function()
                 espCache[player] = nil
             end
         end
+    else
+        for player, data in pairs(espCache) do
+            data.billboard:Destroy()
+            espCache[player] = nil
+        end
     end
 end)
 
 -- ============================================================
--- 14. إشعار
+-- إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v3.1",
-        Text = "Loaded! Made by mikey",
+        Title = "⚡ RyzHub v3.3",
+        Text = "Loaded! by mikey",
         Duration = 3
     })
 end)
 
-print("[RyzHub] v3.1 Loaded successfully! | by mikey")
+print("[RyzHub] v3.3 Loaded successfully! | by mikey")
