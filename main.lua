@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v4.1
+-- ⚡ RYZHUB | v4.2
 -- by mikey
 -- Silent Aim + ESP + Speed + Noclip + Aimbot + FOV + Discord
 -- ============================================================
@@ -39,9 +39,10 @@ ScreenGui.Name = "RyzHubUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+-- الإطار الرئيسي (أكبر ليستوعب العناصر)
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 400, 0, 550)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -275)
+MainFrame.Size = UDim2.new(0, 350, 0, 500)
+MainFrame.Position = UDim2.new(0, 20, 0.5, -250)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -61,7 +62,7 @@ stroke.Parent = MainFrame
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "⚡ RYZHUB v4.1"
+Title.Text = "⚡ RYZHUB v4.2"
 Title.TextColor3 = Config.AccentColor
 Title.TextSize = 16
 Title.Font = Enum.Font.GothamBold
@@ -106,30 +107,17 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 3. ScrollFrame (يدوي)
+-- 3. عناصر التحكم (بإحداثيات ثابتة - بدون ScrollingFrame)
 -- ============================================================
-local ScrollFrame = Instance.new("ScrollingFrame")
-ScrollFrame.Size = UDim2.new(1, -10, 1, -100)
-ScrollFrame.Position = UDim2.new(0, 5, 0, 55)
-ScrollFrame.BackgroundTransparency = 1
-ScrollFrame.BorderSizePixel = 0
-ScrollFrame.ScrollBarThickness = 4
-ScrollFrame.ScrollBarImageColor3 = Config.AccentColor
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 900)
-ScrollFrame.Parent = MainFrame
+local BaseY = 60
 
--- ============================================================
--- 4. دوال مساعدة (بإحداثيات ثابتة)
--- ============================================================
-local currentY = 5
-
-local function CreateToggle(text, callback)
+local function CreateToggle(text, yPos, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -10, 0, 35)
-    frame.Position = UDim2.new(0, 0, 0, currentY)
+    frame.Size = UDim2.new(1, -20, 0, 35)
+    frame.Position = UDim2.new(0, 10, 0, yPos)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     frame.BorderSizePixel = 0
-    frame.Parent = ScrollFrame
+    frame.Parent = MainFrame
 
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
@@ -181,17 +169,15 @@ local function CreateToggle(text, callback)
         end
         callback(state)
     end)
-    
-    currentY = currentY + 40
 end
 
-local function CreateSlider(text, minVal, maxVal, default, callback)
+local function CreateSlider(text, minVal, maxVal, default, yPos, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -10, 0, 50)
-    frame.Position = UDim2.new(0, 0, 0, currentY)
+    frame.Size = UDim2.new(1, -20, 0, 50)
+    frame.Position = UDim2.new(0, 10, 0, yPos)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     frame.BorderSizePixel = 0
-    frame.Parent = ScrollFrame
+    frame.Parent = MainFrame
 
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
@@ -261,23 +247,23 @@ local function CreateSlider(text, minVal, maxVal, default, callback)
             callback(val)
         end
     end)
-    
-    currentY = currentY + 55
 end
 
 -- ============================================================
--- 5. إضافة العناصر
+-- 4. إضافة العناصر (بترتيب)
 -- ============================================================
-CreateToggle("Silent Aim", function(v) Config.SilentAim = v end)
-CreateToggle("Aimbot", function(v) Config.Aimbot = v end)
-CreateToggle("Show FOV Circle", function(v) Config.ShowFOV = v end)
-CreateToggle("Player ESP", function(v) Config.ESP = v end)
-CreateToggle("Noclip", function(v) Config.Noclip = v end)
+-- Toggles
+CreateToggle("Silent Aim", BaseY + 0, function(v) Config.SilentAim = v end)
+CreateToggle("Aimbot", BaseY + 40, function(v) Config.Aimbot = v end)
+CreateToggle("Show FOV Circle", BaseY + 80, function(v) Config.ShowFOV = v end)
+CreateToggle("Player ESP", BaseY + 120, function(v) Config.ESP = v end)
+CreateToggle("Noclip", BaseY + 160, function(v) Config.Noclip = v end)
 
-CreateSlider("FOV Radius", 50, 500, 150, function(v) Config.FOVRadius = v end)
-CreateSlider("Aim Range", 50, 500, 300, function(v) Config.AimRange = v end)
-CreateSlider("Smoothness", 0, 10, 5, function(v) Config.Smoothness = v / 10 end)
-CreateSlider("Walk Speed", 16, 200, 16, function(v)
+-- Sliders
+CreateSlider("FOV Radius", 50, 500, 150, BaseY + 210, function(v) Config.FOVRadius = v end)
+CreateSlider("Aim Range", 50, 500, 300, BaseY + 270, function(v) Config.AimRange = v end)
+CreateSlider("Smoothness", 0, 10, 5, BaseY + 330, function(v) Config.Smoothness = v / 10 end)
+CreateSlider("Walk Speed", 16, 200, 16, BaseY + 390, function(v)
     Config.Speed = v
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = v
@@ -285,18 +271,18 @@ CreateSlider("Walk Speed", 16, 200, 16, function(v)
 end)
 
 -- ============================================================
--- 6. زر Discord
+-- 5. زر Discord
 -- ============================================================
 local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(1, -10, 0, 35)
-DiscordBtn.Position = UDim2.new(0, 0, 0, currentY)
+DiscordBtn.Size = UDim2.new(1, -20, 0, 35)
+DiscordBtn.Position = UDim2.new(0, 10, 0, BaseY + 450)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
 DiscordBtn.Text = "💬 Join Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 DiscordBtn.TextSize = 13
 DiscordBtn.Font = Enum.Font.GothamBold
 DiscordBtn.BorderSizePixel = 0
-DiscordBtn.Parent = ScrollFrame
+DiscordBtn.Parent = MainFrame
 
 local dbc = Instance.new("UICorner")
 dbc.CornerRadius = UDim.new(0, 6)
@@ -315,13 +301,8 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
-currentY = currentY + 45
-
--- تحديث حجم Canvas
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentY + 10)
-
 -- ============================================================
--- 7. FOV Circle
+-- 6. FOV Circle
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Name = "FOVCircle"
@@ -342,14 +323,14 @@ fovStroke.Thickness = 1.5
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 8. ESP Folder
+-- 7. ESP Folder
 -- ============================================================
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "RyzHubESP"
 ESPFolder.Parent = ScreenGui
 
 -- ============================================================
--- 9. Silent Aim / Aimbot Engine
+-- 8. Silent Aim / Aimbot Engine
 -- ============================================================
 local function GetClosestEnemy()
     local char = LocalPlayer.Character
@@ -383,7 +364,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 10. ESP
+-- 9. ESP
 -- ============================================================
 local espCache = {}
 
@@ -426,7 +407,7 @@ local function CreateESP(player)
 end
 
 -- ============================================================
--- 11. الحلقة الرئيسية
+-- 10. الحلقة الرئيسية
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     if Config.SilentAim then
@@ -494,14 +475,14 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 12. إشعار
+-- 11. إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v4.1",
+        Title = "⚡ RyzHub v4.2",
         Text = "Loaded! by mikey",
         Duration = 3
     })
 end)
 
-print("[RyzHub] v4.1 Loaded successfully! | by mikey")
+print("[RyzHub] v4.2 Loaded successfully! | by mikey")
