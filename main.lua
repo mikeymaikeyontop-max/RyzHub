@@ -1,7 +1,7 @@
 -- ============================================================
--- ⚡ RYZHUB | v2.0
+-- ⚡ RYZHUB | v2.1
 -- by Ryz
--- Silent Aim + ESP + Flash Step + Player Features
+-- يعمل على: Delta, Xeno, Solara, Wave, Arceus
 -- ============================================================
 
 if getgenv().RyzHubLoaded then return end
@@ -10,11 +10,34 @@ getgenv().RyzHubLoaded = true
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ============================================================
--- 1. الإعدادات
+-- 1. دوال التوافق (تعمل على جميع المحركات)
+-- ============================================================
+local function SendKey(key)
+    -- محاولة 1: VirtualInputManager
+    if VirtualInputManager then
+        pcall(function()
+            VirtualInputManager:SendKeyEvent(true, key, false, game)
+            task.wait(0.05)
+            VirtualInputManager:SendKeyEvent(false, key, false, game)
+        end)
+    end
+    -- محاولة 2: keypress (للمحركات التي تدعمه)
+    if keypress then
+        pcall(function()
+            keypress(key)
+            task.wait(0.05)
+            keyrelease(key)
+        end)
+    end
+end
+
+-- ============================================================
+-- 2. الإعدادات
 -- ============================================================
 local Config = {
     SilentAim = false,
@@ -26,7 +49,7 @@ local Config = {
 }
 
 -- ============================================================
--- 2. الواجهة
+-- 3. الواجهة
 -- ============================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RyzHubUI"
@@ -46,11 +69,10 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = MainFrame
 
--- العنوان
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "⚡ RYZHUB v2.0"
+Title.Text = "⚡ RYZHUB v2.1"
 Title.TextColor3 = Color3.fromRGB(153, 68, 255)
 Title.TextSize = 18
 Title.Font = Enum.Font.GothamBold
@@ -61,7 +83,6 @@ local tc = Instance.new("UICorner")
 tc.CornerRadius = UDim.new(0, 10)
 tc.Parent = Title
 
--- زر الإغلاق
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 25, 0, 25)
 CloseBtn.Position = UDim2.new(1, -35, 0, 8)
@@ -83,7 +104,7 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 3. دالة Toggle
+-- 4. دوال مساعدة
 -- ============================================================
 local function CreateToggle(text, yPos, callback)
     local frame = Instance.new("Frame")
@@ -145,9 +166,6 @@ local function CreateToggle(text, yPos, callback)
     end)
 end
 
--- ============================================================
--- 4. دالة زر
--- ============================================================
 local function CreateButton(text, yPos, callback)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, -20, 0, 35)
@@ -164,12 +182,6 @@ local function CreateButton(text, yPos, callback)
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = btn
 
-    btn.MouseEnter:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-    end)
-    btn.MouseLeave:Connect(function()
-        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    end)
     btn.MouseButton1Click:Connect(callback)
 end
 
@@ -207,7 +219,7 @@ CreateButton("Reset Speed", 340, function()
 end)
 
 -- ============================================================
--- 6. Silent Aim Engine
+-- 6. Silent Aim
 -- ============================================================
 local function GetClosestEnemy()
     local char = LocalPlayer.Character
@@ -288,6 +300,8 @@ RunService.RenderStepped:Connect(function()
                 CreateESP(player)
             end
         end
+    else
+        RemoveESP()
     end
 end)
 
@@ -298,9 +312,7 @@ task.spawn(function()
     while ScreenGui.Parent do
         if Config.FlashStepZ or Config.FlashStepX then
             local key = Config.FlashStepX and "X" or "Z"
-            game:GetService("VirtualInputManager"):SendKeyEvent(true, key, false, game)
-            task.wait(0.05)
-            game:GetService("VirtualInputManager"):SendKeyEvent(false, key, false, game)
+            SendKey(key)
             task.wait(0.5)
         else
             task.wait(0.5)
@@ -309,12 +321,14 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 10. إشعار
+-- 10. إشعار (محمي بـ pcall)
 -- ============================================================
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "⚡ RyzHub v2.0",
-    Text = "Loaded with Silent Aim + ESP + Flash Step!",
-    Duration = 3
-})
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "⚡ RyzHub v2.1",
+        Text = "Loaded successfully!",
+        Duration = 3
+    })
+end)
 
-print("[RyzHub] v2.0 Loaded successfully!")
+print("[RyzHub] v2.1 Loaded successfully!")
