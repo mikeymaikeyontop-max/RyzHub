@@ -1,33 +1,37 @@
 -- ============================================================
--- ⚡ RYZHUB | v2.1
+-- ⚡ RYZHUB | v2.2 (Real Edition)
 -- by Ryz
--- يعمل على: Delta, Xeno, Solara, Wave, Arceus
+-- متوافق مع: Real, Delta, Xeno, Solara
 -- ============================================================
 
 if getgenv().RyzHubLoaded then return end
 getgenv().RyzHubLoaded = true
 
+-- التحقق من وجود game
+if not game then
+    warn("[RyzHub] game is nil. Real may not be injected properly.")
+    return
+end
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ============================================================
--- 1. دوال التوافق (تعمل على جميع المحركات)
+-- دالة إرسال المفتاح (متوافقة مع جميع المحركات)
 -- ============================================================
 local function SendKey(key)
-    -- محاولة 1: VirtualInputManager
-    if VirtualInputManager then
-        pcall(function()
-            VirtualInputManager:SendKeyEvent(true, key, false, game)
-            task.wait(0.05)
-            VirtualInputManager:SendKeyEvent(false, key, false, game)
-        end)
-    end
-    -- محاولة 2: keypress (للمحركات التي تدعمه)
-    if keypress then
+    -- المحاولة 1: VirtualInputManager (إذا كان متاحاً)
+    local success1 = pcall(function()
+        local VIM = game:GetService("VirtualInputManager")
+        VIM:SendKeyEvent(true, key, false, game)
+        task.wait(0.05)
+        VIM:SendKeyEvent(false, key, false, game)
+    end)
+    
+    -- المحاولة 2: keypress (إذا كان متاحاً)
+    if not success1 then
         pcall(function()
             keypress(key)
             task.wait(0.05)
@@ -37,19 +41,18 @@ local function SendKey(key)
 end
 
 -- ============================================================
--- 2. الإعدادات
+-- الإعدادات
 -- ============================================================
 local Config = {
     SilentAim = false,
     ESP = false,
-    FlashStepZ = false,
-    FlashStepX = false,
+    FlashStep = false,
     AimRange = 200,
     Smoothness = 0.5,
 }
 
 -- ============================================================
--- 3. الواجهة
+-- الواجهة
 -- ============================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RyzHubUI"
@@ -57,8 +60,8 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 400, 0, 450)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -225)
+MainFrame.Size = UDim2.new(0, 400, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -200)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -72,7 +75,7 @@ corner.Parent = MainFrame
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "⚡ RYZHUB v2.1"
+Title.Text = "⚡ RYZHUB v2.2"
 Title.TextColor3 = Color3.fromRGB(153, 68, 255)
 Title.TextSize = 18
 Title.Font = Enum.Font.GothamBold
@@ -104,7 +107,7 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 4. دوال مساعدة
+-- دوال المساعدة
 -- ============================================================
 local function CreateToggle(text, yPos, callback)
     local frame = Instance.new("Frame")
@@ -186,32 +189,31 @@ local function CreateButton(text, yPos, callback)
 end
 
 -- ============================================================
--- 5. العناصر
+-- العناصر
 -- ============================================================
 CreateToggle("Silent Aim", 55, function(v) Config.SilentAim = v end)
 CreateToggle("Player ESP", 95, function(v) Config.ESP = v end)
-CreateToggle("Flash Step (Z)", 135, function(v) Config.FlashStepZ = v end)
-CreateToggle("Flash Step (X)", 175, function(v) Config.FlashStepX = v end)
+CreateToggle("Flash Step (Z)", 135, function(v) Config.FlashStep = v end)
 
-CreateButton("WalkSpeed: 50", 220, function()
+CreateButton("WalkSpeed: 50", 180, function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = 50
     end
 end)
 
-CreateButton("WalkSpeed: 100", 260, function()
+CreateButton("WalkSpeed: 100", 220, function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = 100
     end
 end)
 
-CreateButton("JumpPower: 200", 300, function()
+CreateButton("JumpPower: 200", 260, function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.JumpPower = 200
     end
 end)
 
-CreateButton("Reset Speed", 340, function()
+CreateButton("Reset Speed", 300, function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = 16
         LocalPlayer.Character.Humanoid.JumpPower = 50
@@ -219,7 +221,7 @@ CreateButton("Reset Speed", 340, function()
 end)
 
 -- ============================================================
--- 6. Silent Aim
+-- Silent Aim
 -- ============================================================
 local function GetClosestEnemy()
     local char = LocalPlayer.Character
@@ -244,7 +246,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 7. ESP
+-- ESP
 -- ============================================================
 local espCache = {}
 
@@ -279,10 +281,9 @@ local function RemoveESP()
 end
 
 -- ============================================================
--- 8. الحلقة الرئيسية
+-- الحلقة الرئيسية
 -- ============================================================
 RunService.RenderStepped:Connect(function()
-    -- Silent Aim
     if Config.SilentAim then
         local enemy = GetClosestEnemy()
         if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
@@ -293,7 +294,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP
     if Config.ESP then
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
@@ -306,13 +306,12 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 9. Flash Step Auto
+-- Flash Step Auto
 -- ============================================================
 task.spawn(function()
     while ScreenGui.Parent do
-        if Config.FlashStepZ or Config.FlashStepX then
-            local key = Config.FlashStepX and "X" or "Z"
-            SendKey(key)
+        if Config.FlashStep then
+            SendKey("Z")
             task.wait(0.5)
         else
             task.wait(0.5)
@@ -321,14 +320,14 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 10. إشعار (محمي بـ pcall)
+-- إشعار (محمي)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v2.1",
-        Text = "Loaded successfully!",
+        Title = "⚡ RyzHub v2.2",
+        Text = "Loaded successfully on Real!",
         Duration = 3
     })
 end)
 
-print("[RyzHub] v2.1 Loaded successfully!")
+print("[RyzHub] v2.2 Loaded successfully!")
