@@ -1,7 +1,6 @@
 -- ============================================================
--- ⚡ RYZHUB | v13.0 (Stable Edition)
+-- ⚡ RYZHUB | v14.1 (Big Red Flash Target Box)
 -- by mikey
--- Combat + ESP + Silent Aim + Fly + Macro + Blacklist
 -- ============================================================
 
 print("[RyzHub] Loading...")
@@ -25,15 +24,10 @@ local Config = {
     Noclip = false,
     AutoFlash = false,
     Aimlock = false,
-    MouseLock = false,
     Fly = false,
-    AntiStun = false,
     Hitbox = false,
     SmartAutoV3 = false,
-    SoruMechanics = false,
     JumpMacro = false,
-    FFlagConfig = false,
-    ReducedESP = false,
     FOVRadius = 150,
     AimRange = 300,
     Speed = 16,
@@ -283,13 +277,9 @@ end
 local CombatCol1 = CreateSection(CombatTab, "Combat Skills", 10, 5, 250)
 CreateCheckbox(CombatCol1, "Silent Aim", 30, function(v) Config.SilentAim = v end)
 CreateCheckbox(CombatCol1, "Aimlock", 55, function(v) Config.Aimlock = v end)
-CreateCheckbox(CombatCol1, "Mouse Lock", 80, function(v) Config.MouseLock = v end)
-CreateCheckbox(CombatCol1, "Auto Flash (R)", 105, function(v) Config.AutoFlash = v end)
-CreateCheckbox(CombatCol1, "Anti-Stun", 130, function(v) Config.AntiStun = v end)
-CreateCheckbox(CombatCol1, "Hitbox System", 155, function(v) Config.Hitbox = v end)
-CreateCheckbox(CombatCol1, "Smart Auto V3 (Ghoul)", 180, function(v) Config.SmartAutoV3 = v end)
-CreateCheckbox(CombatCol1, "Soru Mechanics", 205, function(v) Config.SoruMechanics = v end)
-CreateCheckbox(CombatCol1, "Jump Macro", 230, function(v) Config.JumpMacro = v end)
+CreateCheckbox(CombatCol1, "Auto Flash (Click Target)", 80, function(v) Config.AutoFlash = v end)
+CreateCheckbox(CombatCol1, "Hitbox System", 105, function(v) Config.Hitbox = v end)
+CreateCheckbox(CombatCol1, "Smart Auto V3", 130, function(v) Config.SmartAutoV3 = v end)
 
 local CombatCol2 = CreateSection(CombatTab, "Targeting", 280, 5, 250)
 CreateSlider(CombatCol2, "FOV Radius", 50, 500, 150, 30, function(v) Config.FOVRadius = v end)
@@ -301,7 +291,7 @@ CreateCheckbox(CombatCol2, "Show FOV", 100, function(v) Config.ShowFOV = v end)
 -- ============================================================
 local ESPCol = CreateSection(ESPTab, "ESP Settings", 10, 5, 520)
 CreateCheckbox(ESPCol, "Enable ESP", 30, function(v) Config.ESP = v end)
-CreateCheckbox(ESPCol, "Reduced Detail (Better Performance)", 55, function(v) Config.ReducedESP = v end)
+CreateCheckbox(ESPCol, "Reduced Detail", 55, function(v) Config.ReducedESP = v end)
 
 -- ============================================================
 -- 6. تبويب Misc
@@ -314,7 +304,7 @@ CreateSlider(MiscCol1, "Walk Speed", 16, 200, 16, 30, function(v)
     end
 end)
 CreateCheckbox(MiscCol1, "Noclip", 65, function(v) Config.Noclip = v end)
-CreateCheckbox(MiscCol1, "Fly (F)", 90, function(v) Config.Fly = v end)
+CreateCheckbox(MiscCol1, "Fly", 90, function(v) Config.Fly = v end)
 CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 115, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
@@ -457,21 +447,66 @@ fovStroke.Color = Color3.fromRGB(153, 68, 255)
 fovStroke.Thickness = 2
 fovStroke.Parent = FOVFrame
 
-RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if Config.ShowFOV and FOVFrame then
-            FOVFrame.Visible = true
-            local mouse = UserInputService:GetMouseLocation()
-            FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
-            FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
-        elseif FOVFrame then
-            FOVFrame.Visible = false
+-- ============================================================
+-- 10. Flash Target Box (كبير - 200x200)
+-- ============================================================
+local flashBox = Instance.new("TextButton")
+flashBox.Name = "FlashTargetBox"
+flashBox.Size = UDim2.new(0, 200, 0, 200)
+flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+flashBox.BackgroundTransparency = 0.6
+flashBox.Text = ""
+flashBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+flashBox.TextSize = 14
+flashBox.Font = Enum.Font.GothamBold
+flashBox.BorderSizePixel = 4
+flashBox.BorderColor3 = Color3.fromRGB(255, 0, 0)
+flashBox.Visible = false
+flashBox.ZIndex = 999
+flashBox.Parent = ScreenGui
+
+local flashCorner = Instance.new("UICorner")
+flashCorner.CornerRadius = UDim.new(0, 15)
+flashCorner.Parent = flashBox
+
+-- عند دخول الماوس → أحمر قوي
+flashBox.MouseEnter:Connect(function()
+    flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    flashBox.BackgroundTransparency = 0.3
+    flashBox.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    flashBox.BorderSizePixel = 6
+end)
+
+-- عند خروج الماوس → أحمر شفاف
+flashBox.MouseLeave:Connect(function()
+    flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    flashBox.BackgroundTransparency = 0.6
+    flashBox.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    flashBox.BorderSizePixel = 4
+end)
+
+-- عند الضغط → تنفيذ Flash Step
+flashBox.MouseButton1Click:Connect(function()
+    local target = flashBox:GetAttribute("TargetPlayer")
+    if target then
+        local targetPlayer = Players:FindFirstChild(target)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local myChar = LocalPlayer.Character
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                pcall(function()
+                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
+                    task.wait(0.05)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
+                end)
+                print("[RyzHub] Flash Step → " .. targetPlayer.Name)
+            end
         end
-    end)
+    end
 end)
 
 -- ============================================================
--- 10. ESP
+-- 11. ESP
 -- ============================================================
 local espCache = {}
 
@@ -522,7 +557,7 @@ local function RemoveESP(player)
 end
 
 -- ============================================================
--- 11. GetClosestEnemy
+-- 12. GetClosestEnemy
 -- ============================================================
 local function GetClosestEnemy()
     local closest = nil
@@ -546,7 +581,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 12. Fly
+-- 13. Fly
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -589,7 +624,51 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 13. Noclip + ESP حلقة
+-- 14. Auto Flash Step Box Update
+-- ============================================================
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.AutoFlash then
+            local enemy = GetClosestEnemy()
+            if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
+                local head = enemy.Character.Head
+                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                
+                if onScreen then
+                    flashBox.Visible = true
+                    -- المربع يحيط بالهدف (200x200)
+                    flashBox.Position = UDim2.new(0, screenPos.X - 100, 0, screenPos.Y - 100)
+                    flashBox:SetAttribute("TargetPlayer", enemy.Name)
+                else
+                    flashBox.Visible = false
+                end
+            else
+                flashBox.Visible = false
+            end
+        else
+            flashBox.Visible = false
+        end
+    end)
+end)
+
+-- ============================================================
+-- 15. FOV Circle Update
+-- ============================================================
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.ShowFOV and FOVFrame then
+            FOVFrame.Visible = true
+            local mouse = UserInputService:GetMouseLocation()
+            FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
+            FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
+        elseif FOVFrame then
+            FOVFrame.Visible = false
+        end
+    end)
+end)
+
+-- ============================================================
+-- 16. Noclip + ESP
 -- ============================================================
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
@@ -627,27 +706,11 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 14. Auto Flash Step
--- ============================================================
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    if input.KeyCode == Enum.KeyCode.R and Config.AutoFlash then
-        local closest = GetClosestEnemy()
-        if closest and closest.Character:FindFirstChild("HumanoidRootPart") then
-            local myChar = LocalPlayer.Character
-            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, closest.Character.HumanoidRootPart.Position)
-            end
-        end
-    end
-end)
-
--- ============================================================
--- 15. Silent Aim + Aimlock
+-- 17. Silent Aim + Aimlock
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
-        if Config.SilentAim or Config.Aimlock or Config.MouseLock then
+        if Config.SilentAim or Config.Aimlock then
             local closest = GetClosestEnemy()
             if closest and closest.Character then
                 local targetPart = closest.Character:FindFirstChild("Head")
@@ -660,7 +723,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 16. F4 (إخفاء) + F7 (إغلاق)
+-- 18. F4 (إخفاء) + F7 (إغلاق)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
@@ -677,7 +740,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
         Config.Noclip = false
         Config.AutoFlash = false
         Config.Aimlock = false
-        Config.MouseLock = false
         Config.Fly = false
         
         for player, data in pairs(espCache) do
@@ -694,14 +756,14 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 -- ============================================================
--- 17. إشعار
+-- 19. إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v13.0",
-        Text = "Loaded successfully!",
+        Title = "⚡ RyzHub v14.1",
+        Text = "Big Red Flash Target Loaded!",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v13.0 Loaded successfully!")
+print("[RyzHub] v14.1 Loaded successfully!")
