@@ -1,7 +1,8 @@
 -- ============================================================
--- ⚡ RYZHUB | v4.2
+-- ⚡ RYZHUB | v4.4
 -- by mikey
 -- Silent Aim + ESP + Speed + Noclip + Aimbot + FOV + Discord
+-- F4: إخفاء الواجهة | F7: إغلاق السكربت
 -- ============================================================
 
 print("[RyzHub] Loading...")
@@ -39,9 +40,8 @@ ScreenGui.Name = "RyzHubUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- الإطار الرئيسي (أكبر ليستوعب العناصر)
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 350, 0, 500)
+MainFrame.Size = UDim2.new(0, 320, 0, 500)
 MainFrame.Position = UDim2.new(0, 20, 0.5, -250)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
@@ -62,7 +62,7 @@ stroke.Parent = MainFrame
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "⚡ RYZHUB v4.2"
+Title.Text = "⚡ RYZHUB v4.4"
 Title.TextColor3 = Config.AccentColor
 Title.TextSize = 16
 Title.Font = Enum.Font.GothamBold
@@ -107,17 +107,28 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 3. عناصر التحكم (بإحداثيات ثابتة - بدون ScrollingFrame)
+-- 3. حاوية العناصر
 -- ============================================================
-local BaseY = 60
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -10, 1, -60)
+Container.Position = UDim2.new(0, 5, 0, 55)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
 
-local function CreateToggle(text, yPos, callback)
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = Container
+
+-- ============================================================
+-- 4. دوال Toggle و Slider
+-- ============================================================
+local function CreateToggle(text, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -20, 0, 35)
-    frame.Position = UDim2.new(0, 10, 0, yPos)
+    frame.Size = UDim2.new(1, 0, 0, 32)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     frame.BorderSizePixel = 0
-    frame.Parent = MainFrame
+    frame.Parent = Container
 
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
@@ -125,30 +136,30 @@ local function CreateToggle(text, yPos, callback)
 
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, -60, 1, 0)
-    label.Position = UDim2.new(0, 10, 0, 0)
+    label.Position = UDim2.new(0, 8, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = Color3.fromRGB(220, 220, 220)
-    label.TextSize = 13
+    label.TextSize = 12
     label.Font = Enum.Font.GothamBold
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
 
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 40, 0, 20)
-    btn.Position = UDim2.new(1, -50, 0.5, -10)
+    btn.Size = UDim2.new(0, 36, 0, 18)
+    btn.Position = UDim2.new(1, -44, 0.5, -9)
     btn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
     btn.Text = ""
     btn.BorderSizePixel = 0
     btn.Parent = frame
 
     local bc = Instance.new("UICorner")
-    bc.CornerRadius = UDim.new(0, 10)
+    bc.CornerRadius = UDim.new(0, 9)
     bc.Parent = btn
 
     local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0, 16, 0, 16)
-    knob.Position = UDim2.new(0, 2, 0.5, -8)
+    knob.Size = UDim2.new(0, 14, 0, 14)
+    knob.Position = UDim2.new(0, 2, 0.5, -7)
     knob.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
     knob.BorderSizePixel = 0
     knob.Parent = btn
@@ -162,52 +173,51 @@ local function CreateToggle(text, yPos, callback)
         state = not state
         if state then
             btn.BackgroundColor3 = Config.AccentColor
-            knob.Position = UDim2.new(1, -18, 0.5, -8)
+            knob.Position = UDim2.new(1, -16, 0.5, -7)
         else
             btn.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-            knob.Position = UDim2.new(0, 2, 0.5, -8)
+            knob.Position = UDim2.new(0, 2, 0.5, -7)
         end
         callback(state)
     end)
 end
 
-local function CreateSlider(text, minVal, maxVal, default, yPos, callback)
+local function CreateSlider(text, minVal, maxVal, default, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -20, 0, 50)
-    frame.Position = UDim2.new(0, 10, 0, yPos)
+    frame.Size = UDim2.new(1, 0, 0, 45)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     frame.BorderSizePixel = 0
-    frame.Parent = MainFrame
+    frame.Parent = Container
 
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
     c.Parent = frame
 
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -80, 0, 25)
-    label.Position = UDim2.new(0, 10, 0, 0)
+    label.Size = UDim2.new(1, -60, 0, 20)
+    label.Position = UDim2.new(0, 8, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = Color3.fromRGB(220, 220, 220)
-    label.TextSize = 13
+    label.TextSize = 12
     label.Font = Enum.Font.GothamBold
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
 
     local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0, 50, 0, 25)
-    valueLabel.Position = UDim2.new(1, -60, 0, 0)
+    valueLabel.Size = UDim2.new(0, 40, 0, 20)
+    valueLabel.Position = UDim2.new(1, -50, 0, 0)
     valueLabel.BackgroundTransparency = 1
     valueLabel.Text = tostring(default)
     valueLabel.TextColor3 = Config.AccentColor
-    valueLabel.TextSize = 13
+    valueLabel.TextSize = 12
     valueLabel.Font = Enum.Font.GothamBold
     valueLabel.TextXAlignment = Enum.TextXAlignment.Right
     valueLabel.Parent = frame
 
     local sliderBg = Instance.new("Frame")
-    sliderBg.Size = UDim2.new(1, -20, 0, 6)
-    sliderBg.Position = UDim2.new(0, 10, 0, 35)
+    sliderBg.Size = UDim2.new(1, -16, 0, 5)
+    sliderBg.Position = UDim2.new(0, 8, 0, 30)
     sliderBg.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
     sliderBg.BorderSizePixel = 0
     sliderBg.Parent = frame
@@ -250,39 +260,34 @@ local function CreateSlider(text, minVal, maxVal, default, yPos, callback)
 end
 
 -- ============================================================
--- 4. إضافة العناصر (بترتيب)
+-- 5. العناصر
 -- ============================================================
--- Toggles
-CreateToggle("Silent Aim", BaseY + 0, function(v) Config.SilentAim = v end)
-CreateToggle("Aimbot", BaseY + 40, function(v) Config.Aimbot = v end)
-CreateToggle("Show FOV Circle", BaseY + 80, function(v) Config.ShowFOV = v end)
-CreateToggle("Player ESP", BaseY + 120, function(v) Config.ESP = v end)
-CreateToggle("Noclip", BaseY + 160, function(v) Config.Noclip = v end)
+CreateToggle("Silent Aim", function(v) Config.SilentAim = v end)
+CreateToggle("Aimbot", function(v) Config.Aimbot = v end)
+CreateToggle("Show FOV Circle", function(v) Config.ShowFOV = v end)
+CreateToggle("Player ESP", function(v) Config.ESP = v end)
+CreateToggle("Noclip", function(v) Config.Noclip = v end)
 
--- Sliders
-CreateSlider("FOV Radius", 50, 500, 150, BaseY + 210, function(v) Config.FOVRadius = v end)
-CreateSlider("Aim Range", 50, 500, 300, BaseY + 270, function(v) Config.AimRange = v end)
-CreateSlider("Smoothness", 0, 10, 5, BaseY + 330, function(v) Config.Smoothness = v / 10 end)
-CreateSlider("Walk Speed", 16, 200, 16, BaseY + 390, function(v)
+CreateSlider("FOV Radius", 50, 500, 150, function(v) Config.FOVRadius = v end)
+CreateSlider("Aim Range", 50, 500, 300, function(v) Config.AimRange = v end)
+CreateSlider("Smoothness", 0, 10, 5, function(v) Config.Smoothness = v / 10 end)
+CreateSlider("Walk Speed", 16, 200, 16, function(v)
     Config.Speed = v
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = v
     end
 end)
 
--- ============================================================
--- 5. زر Discord
--- ============================================================
+-- زر Discord
 local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(1, -20, 0, 35)
-DiscordBtn.Position = UDim2.new(0, 10, 0, BaseY + 450)
+DiscordBtn.Size = UDim2.new(1, 0, 0, 32)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
 DiscordBtn.Text = "💬 Join Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DiscordBtn.TextSize = 13
+DiscordBtn.TextSize = 12
 DiscordBtn.Font = Enum.Font.GothamBold
 DiscordBtn.BorderSizePixel = 0
-DiscordBtn.Parent = MainFrame
+DiscordBtn.Parent = Container
 
 local dbc = Instance.new("UICorner")
 dbc.CornerRadius = UDim.new(0, 6)
@@ -295,7 +300,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "💬 Discord",
-            Text = "Link copied! Join us!",
+            Text = "Link copied!",
             Duration = 3
         })
     end)
@@ -338,7 +343,6 @@ local function GetClosestEnemy()
     local myPos = char.HumanoidRootPart.Position
     local closest = nil
     local minDist = Config.AimRange
-    
     local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
     for _, player in ipairs(Players:GetPlayers()) do
@@ -410,17 +414,7 @@ end
 -- 10. الحلقة الرئيسية
 -- ============================================================
 RunService.RenderStepped:Connect(function()
-    if Config.SilentAim then
-        local enemy = GetClosestEnemy()
-        if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
-            local targetPos = enemy.Character.Head.Position
-            local cameraPos = Camera.CFrame.Position
-            local lookAt = CFrame.lookAt(cameraPos, targetPos)
-            Camera.CFrame = Camera.CFrame:Lerp(lookAt, Config.Smoothness)
-        end
-    end
-
-    if Config.Aimbot then
+    if Config.SilentAim or Config.Aimbot then
         local enemy = GetClosestEnemy()
         if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
             local targetPos = enemy.Character.Head.Position
@@ -475,14 +469,63 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 11. إشعار
+-- 11. اختصارات لوحة المفاتيح (F4 للإخفاء، F7 للإغلاق)
+-- ============================================================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    -- F4: إخفاء / إظهار الواجهة
+    if input.KeyCode == Enum.KeyCode.F4 then
+        if MainFrame then
+            MainFrame.Visible = not MainFrame.Visible
+            if MainFrame.Visible then
+                print("[RyzHub] UI Shown")
+            else
+                print("[RyzHub] UI Hidden (Script still running)")
+            end
+        end
+    end
+    
+    -- F7: إغلاق السكربت بالكامل
+    if input.KeyCode == Enum.KeyCode.F7 then
+        print("[RyzHub] Shutting down...")
+        
+        -- إيقاف كل شيء
+        Config.SilentAim = false
+        Config.Aimbot = false
+        Config.ESP = false
+        Config.ShowFOV = false
+        Config.Noclip = false
+        
+        -- تدمير الواجهة
+        if ScreenGui then ScreenGui:Destroy() end
+        if ESPFolder then ESPFolder:Destroy() end
+        if FOVFrame then FOVFrame:Destroy() end
+        
+        -- إعادة العلم
+        getgenv().RyzHubLoaded = false
+        
+        -- إشعار
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "⚡ RyzHub",
+                Text = "Script closed.",
+                Duration = 2
+            })
+        end)
+    end
+end)
+
+-- ============================================================
+-- 12. إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v4.2",
-        Text = "Loaded! by mikey",
-        Duration = 3
+        Title = "⚡ RyzHub v4.4",
+        Text = "Loaded! by mikey | F4=Hide, F7=Close",
+        Duration = 5
     })
 end)
 
-print("[RyzHub] v4.2 Loaded successfully! | by mikey")
+print("[RyzHub] v4.4 Loaded successfully! | by mikey")
+print("[RyzHub] Press F4 to hide UI, F7 to close script.")
