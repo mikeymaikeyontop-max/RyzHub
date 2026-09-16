@@ -1,6 +1,7 @@
 -- ============================================================
--- ⚡ RYZHUB | v10.0 (Final Stable Edition)
+-- ⚡ RYZHUB | v10.1 (Full Edition)
 -- by mikey
+-- FOV + ESP + Silent Aim + Aimlock + Mouse Lock + Auto Flash + Whitelist
 -- ============================================================
 
 print("[RyzHub] Loading...")
@@ -23,6 +24,8 @@ local Config = {
     ShowFOV = false,
     Noclip = false,
     AutoFlash = false,
+    Aimlock = false,
+    MouseLock = false,
     FOVRadius = 150,
     AimRange = 300,
     Speed = 16,
@@ -284,10 +287,12 @@ CreateCheckbox(MoveColumn, "Noclip", 65, function(v) Config.Noclip = v end)
 -- ============================================================
 local MiscColumn = CreateSection(MiscTab, "Misc", 10, 5, 220)
 CreateCheckbox(MiscColumn, "Silent Aim", 30, function(v) Config.SilentAim = v end)
-CreateCheckbox(MiscColumn, "Show FOV", 55, function(v) Config.ShowFOV = v end)
-CreateCheckbox(MiscColumn, "Auto Flash (R)", 80, function(v) Config.AutoFlash = v end)
-CreateSlider(MiscColumn, "FOV Radius", 50, 500, 150, 105, function(v) Config.FOVRadius = v end)
-CreateSlider(MiscColumn, "Aim Range", 50, 500, 300, 140, function(v) Config.AimRange = v end)
+CreateCheckbox(MiscColumn, "Aimlock (Right Click)", 55, function(v) Config.Aimlock = v end)
+CreateCheckbox(MiscColumn, "Mouse Lock", 80, function(v) Config.MouseLock = v end)
+CreateCheckbox(MiscColumn, "Show FOV", 105, function(v) Config.ShowFOV = v end)
+CreateCheckbox(MiscColumn, "Auto Flash (R)", 130, function(v) Config.AutoFlash = v end)
+CreateSlider(MiscColumn, "FOV Radius", 50, 500, 150, 155, function(v) Config.FOVRadius = v end)
+CreateSlider(MiscColumn, "Aim Range", 50, 500, 300, 190, function(v) Config.AimRange = v end)
 
 -- ============================================================
 -- 6. محتوى تبويب Whitelist
@@ -363,14 +368,14 @@ rbc.Parent = RefreshBtn
 RefreshBtn.MouseButton1Click:Connect(RefreshPlayerList)
 
 -- ============================================================
--- 7. Floating Button (بالصورة الجديدة)
+-- 7. Floating Button
 -- ============================================================
 local FloatingBtn = Instance.new("ImageButton")
 FloatingBtn.Name = "FloatingButton"
 FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
 FloatingBtn.Position = UDim2.new(0, 20, 0.5, -25)
 FloatingBtn.BackgroundColor3 = Color3.fromRGB(153, 68, 255)
-FloatingBtn.Image = "rbxassetid://11270029456" -- الأيقونة البنفسجية مع البرق
+FloatingBtn.Image = "rbxassetid://11270029456"
 FloatingBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 FloatingBtn.BorderSizePixel = 0
 FloatingBtn.ZIndex = 1000
@@ -442,7 +447,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 9. ESP (محسّن - يظهر فوق اللاعبين)
+-- 9. ESP (محسّن)
 -- ============================================================
 local espCache = {}
 
@@ -454,18 +459,17 @@ local function CreateESP(player)
     
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "RyzESP_" .. player.Name
-    billboard.Size = UDim2.new(0, 200, 0, 50)
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Size = UDim2.new(0, 200, 0, 60)
+    billboard.StudsOffsetWorldSpace = Vector3.new(0, 3.5, 0)
     billboard.AlwaysOnTop = true
-    billboard.LightInfluence = false
-    billboard.MaxDistance = 1000
     billboard.Adornee = head
-    billboard.Parent = head  -- ✅ Parent على الرأس مباشرة
+    billboard.Parent = game:GetService("CoreGui")
     
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Name = "NameLabel"
     nameLabel.Size = UDim2.new(1, 0, 0, 25)
-    nameLabel.BackgroundTransparency = 1
+    nameLabel.BackgroundTransparency = 0.3
+    nameLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     nameLabel.Text = player.Name
     nameLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
     nameLabel.TextSize = 14
@@ -478,7 +482,8 @@ local function CreateESP(player)
     distLabel.Name = "DistLabel"
     distLabel.Size = UDim2.new(1, 0, 0, 20)
     distLabel.Position = UDim2.new(0, 0, 0, 25)
-    distLabel.BackgroundTransparency = 1
+    distLabel.BackgroundTransparency = 0.3
+    distLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     distLabel.Text = "0m"
     distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     distLabel.TextSize = 12
@@ -498,7 +503,7 @@ local function RemoveESP(player)
 end
 
 -- ============================================================
--- 10. حلقة ESP
+-- 10. حلقة ESP + Noclip
 -- ============================================================
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
@@ -544,87 +549,127 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 11. Auto Flash Step
+-- 11. الحصول على العدو الأقرب
+-- ============================================================
+local function GetClosestEnemy()
+    local closest = nil
+    local minDist = Config.AimRange
+    local myChar = LocalPlayer.Character
+    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return nil end
+    local myPos = myChar.HumanoidRootPart.Position
+    for _, p in ipairs(Players:GetPlayers()) do
+        if not IsWhitelisted(p) and p.Character then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local d = (myPos - hrp.Position).Magnitude
+                if d < minDist then
+                    minDist = d
+                    closest = p
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- ============================================================
+-- 12. Auto Flash Step (عند الضغط على R)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.R and Config.AutoFlash then
-        local closest = nil
-        local minDist = Config.AimRange
-        local myChar = LocalPlayer.Character
-        if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
-        local myPos = myChar.HumanoidRootPart.Position
-        for _, p in ipairs(Players:GetPlayers()) do
-            if not IsWhitelisted(p) and p.Character then
-                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local d = (myPos - hrp.Position).Magnitude
-                    if d < minDist then minDist = d; closest = p end
-                end
-            end
-        end
+        local closest = GetClosestEnemy()
         if closest and closest.Character:FindFirstChild("HumanoidRootPart") then
-            myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, closest.Character.HumanoidRootPart.Position)
+            local myChar = LocalPlayer.Character
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, closest.Character.HumanoidRootPart.Position)
+            end
         end
     end
 end)
 
 -- ============================================================
--- 12. F4 (إخفاء) + F7 (إغلاق كامل)
+-- 13. Silent Aim + Aimlock + Mouse Lock
+-- ============================================================
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.SilentAim then
+            local closest = GetClosestEnemy()
+            if closest and closest.Character then
+                local targetPart = closest.Character:FindFirstChild("Head") or closest.Character:FindFirstChild("HumanoidRootPart")
+                if targetPart then
+                    local myChar = LocalPlayer.Character
+                    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                        local direction = (targetPart.Position - myChar.HumanoidRootPart.Position).Unit
+                        myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, myChar.HumanoidRootPart.Position + direction)
+                    end
+                end
+            end
+        end
+        
+        if Config.Aimlock then
+            local closest = GetClosestEnemy()
+            if closest and closest.Character then
+                local targetPart = closest.Character:FindFirstChild("Head")
+                if targetPart then
+                    local camera = workspace.CurrentCamera
+                    camera.CFrame = CFrame.new(camera.CFrame.Position, targetPart.Position)
+                end
+            end
+        end
+    end)
+end)
+
+-- ============================================================
+-- 14. F4 (إخفاء) + F7 (إغلاق كامل)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
-    -- F4: إخفاء / إظهار
     if input.KeyCode == Enum.KeyCode.F4 then
         MainFrame.Visible = not MainFrame.Visible
         FloatingBtn.Visible = not FloatingBtn.Visible
     end
     
-    -- F7: إغلاق السكربت بالكامل
     if input.KeyCode == Enum.KeyCode.F7 then
         print("[RyzHub] Shutting down...")
         
-        -- إيقاف جميع الميزات
         Config.SilentAim = false
         Config.ESP = false
         Config.ShowFOV = false
         Config.Noclip = false
         Config.AutoFlash = false
+        Config.Aimlock = false
+        Config.MouseLock = false
         
-        -- إزالة ESP
         for player, gui in pairs(espCache) do
             if gui then gui:Destroy() end
         end
         espCache = {}
         
-        -- إعادة WalkSpeed الافتراضي
         if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
             LocalPlayer.Character.Humanoid.WalkSpeed = 16
         end
         
-        -- تدمير الواجهة بالكامل
         if ScreenGui then
             ScreenGui:Destroy()
             ScreenGui = nil
         end
         
-        -- إعادة العلم
         getgenv().RyzHubLoaded = false
-        
         print("[RyzHub] Script terminated successfully!")
     end
 end)
 
 -- ============================================================
--- 13. إشعار
+-- 15. إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v10.0",
+        Title = "⚡ RyzHub v10.1",
         Text = "Loaded! Press F7 to terminate.",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v10.0 Loaded successfully!")
+print("[RyzHub] v10.1 Loaded successfully!")
