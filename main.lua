@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v16.0 (Soru AHK Edition)
+-- ⚡ RYZHUB | v16.0 (Soru AHK + 3D Flash Box)
 -- by mikey
 -- ============================================================
 
@@ -18,6 +18,7 @@ local Camera = workspace.CurrentCamera
 -- 1. الإعدادات
 -- ============================================================
 local Config = {
+    -- Combat
     SilentAim = false,
     ESP = false,
     ShowFOV = false,
@@ -33,7 +34,7 @@ local Config = {
     -- Soru AHK
     SoruAHK = false,
     SoruKey = "Z",  -- Z أو X أو C
-    SoruTriggerKey = Enum.KeyCode.R, -- الزر الذي عند الضغط عليه يتم Flash Step
+    SoruTriggerKey = Enum.KeyCode.R,
 }
 
 local Blacklist = {}
@@ -57,8 +58,8 @@ ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = PlayerGui
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 550, 0, 440)
-MainFrame.Position = UDim2.new(0.5, -275, 0.5, -220)
+MainFrame.Size = UDim2.new(0, 580, 0, 460)
+MainFrame.Position = UDim2.new(0.5, -290, 0.5, -230)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -346,7 +347,7 @@ CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 115, function(v) Config.FlySpee
 -- ============================================================
 local AHKCol = CreateSection(AHKTab, "Soru AHK Settings", 10, 5, 520)
 
-CreateCheckbox(AHKCol, "Enable Soru AHK", 30, function(v) 
+CreateCheckbox(AHKCol, "Enable Soru AHK (Press R)", 30, function(v) 
     Config.SoruAHK = v 
     print("[RyzHub] Soru AHK: " .. tostring(v))
 end)
@@ -744,6 +745,167 @@ UserInputService.InputBegan:Connect(function(input, processed)
     -- التحقق من زر Flash Step
     if input.KeyCode == Config.SoruTriggerKey then
         local target = FlashBoxPart:GetAttribute("TargetPlayer")
-        if target then
+        if target and Config.SoruAHK then
             local targetPlayer = Players:FindFirstChild(target)
-            if targetPlayer and targetPlayer.Character and
+            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local myChar = LocalPlayer.Character
+                if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                    -- 1. القفز
+                    pcall(function()
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+                        task.wait(0.05)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+                    end)
+                    
+                    task.wait(0.1)
+                    
+                    -- 2. Soru
+                    pcall(function()
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
+                        task.wait(0.05)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
+                    end)
+                    
+                    -- 3. الانتقال نحو الهدف
+                    myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                    
+                    -- 4. الضغط على الزر المختار (Z, X, C)
+                    local key = Config.SoruKey
+                    pcall(function()
+                        if key == "Z" then
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Z, false, game)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Z, false, game)
+                        elseif key == "X" then
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.X, false, game)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.X, false, game)
+                        elseif key == "C" then
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.C, false, game)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.C, false, game)
+                        end
+                    end)
+                    
+                    print("[RyzHub] Soru AHK → " .. targetPlayer.Name .. " | Key: " .. key)
+                end
+            end
+        end
+    end
+end)
+
+-- ============================================================
+-- 17. FOV Circle Update
+-- ============================================================
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.ShowFOV and FOVFrame then
+            FOVFrame.Visible = true
+            local mouse = UserInputService:GetMouseLocation()
+            FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
+            FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
+        elseif FOVFrame then
+            FOVFrame.Visible = false
+        end
+    end)
+end)
+
+-- ============================================================
+-- 18. Noclip + ESP
+-- ============================================================
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        pcall(function()
+            if Config.Noclip then
+                local char = LocalPlayer.Character
+                if char then
+                    for _, part in ipairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+            
+            if Config.ESP then
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if not IsBlacklisted(p) and p.Character then
+                        CreateESP(p)
+                    end
+                end
+                for player, data in pairs(espCache) do
+                    if IsBlacklisted(player) or not player.Character then
+                        RemoveESP(player)
+                    end
+                end
+            else
+                for player, data in pairs(espCache) do
+                    RemoveESP(player)
+                end
+            end
+        end)
+        task.wait(0.3)
+    end
+end)
+
+-- ============================================================
+-- 19. Silent Aim + Aimlock
+-- ============================================================
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.SilentAim or Config.Aimlock then
+            local closest = GetClosestEnemy()
+            if closest and closest.Character then
+                local targetPart = closest.Character:FindFirstChild("Head")
+                if targetPart then
+                    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
+                end
+            end
+        end
+    end)
+end)
+
+-- ============================================================
+-- 20. F4 (إخفاء) + F7 (إغلاق)
+-- ============================================================
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    
+    if input.KeyCode == Enum.KeyCode.F4 then
+        MainFrame.Visible = not MainFrame.Visible
+        FloatingBtn.Visible = not FloatingBtn.Visible
+    end
+    
+    if input.KeyCode == Enum.KeyCode.F7 then
+        Config.SilentAim = false
+        Config.ESP = false
+        Config.ShowFOV = false
+        Config.Noclip = false
+        Config.AutoFlash = false
+        Config.Aimlock = false
+        Config.Fly = false
+        Config.SoruAHK = false
+        
+        for player, data in pairs(espCache) do
+            RemoveESP(player)
+        end
+        
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+        
+        if FlashBoxPart then FlashBoxPart:Destroy() end
+        if ScreenGui then ScreenGui:Destroy() end
+        getgenv().RyzHubLoaded = false
+    end
+end)
+
+-- ============================================================
+-- 21. إشعار
+-- ============================================================
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "⚡ RyzHub v16.0",
+        Text = "Soru AHK + 3D Flash Box Loaded!",
+        Duration = 5
+    })
+end)
+
+print("[RyzHub] v16.0 Loaded successfully! | by mikey")
