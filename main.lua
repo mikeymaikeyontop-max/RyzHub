@@ -70,7 +70,6 @@ stroke.Color = Color3.fromRGB(80, 80, 90)
 stroke.Thickness = 1
 stroke.Parent = MainFrame
 
--- شريط التبويبات
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, 0, 0, 30)
 TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -459,20 +458,17 @@ fovStroke.Parent = FOVFrame
 -- ============================================================
 -- 10. 3D Flash Box
 -- ============================================================
--- استخدام Part بدلاً من TextButton للحصول على تأثير 3D
 local FlashBoxPart = Instance.new("Part")
 FlashBoxPart.Name = "RyzFlashBox"
 FlashBoxPart.Size = Vector3.new(6, 6, 6)
-FlashBoxPart.Transparency = 0.6
+FlashBoxPart.Transparency = 1
 FlashBoxPart.Color = Color3.fromRGB(255, 0, 0)
 FlashBoxPart.Material = Enum.Material.Neon
 FlashBoxPart.CanCollide = false
 FlashBoxPart.Anchored = true
 FlashBoxPart.CastShadow = false
 FlashBoxPart.Parent = workspace
-FlashBoxPart.Transparency = 1  -- مخفي في البداية
 
--- إضافة Highlight لجعله يبدو 3D
 local flashHighlight = Instance.new("Highlight")
 flashHighlight.Name = "RyzFlashHighlight"
 flashHighlight.FillColor = Color3.fromRGB(255, 0, 0)
@@ -483,7 +479,6 @@ flashHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 flashHighlight.Adornee = FlashBoxPart
 flashHighlight.Parent = FlashBoxPart
 
--- إضافة BillboardGui لعرض النص
 local flashBillboard = Instance.new("BillboardGui")
 flashBillboard.Name = "RyzFlashBillboard"
 flashBillboard.Size = UDim2.new(0, 150, 0, 50)
@@ -623,10 +618,8 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 14. 3D Flash Box Update + R Key Detection
+-- 14. 3D Flash Box Update
 -- ============================================================
-local targetInBox = nil
-
 RunService.RenderStepped:Connect(function()
     pcall(function()
         if Config.AutoFlash then
@@ -634,45 +627,36 @@ RunService.RenderStepped:Connect(function()
             if enemy and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = enemy.Character.HumanoidRootPart
                 
-                -- تحديث موقع المربع ليكون فوق الهدف
-                FlashBoxPart.CFrame = hrp.CFrame * CFrame.new(0, 0, 0)
+                FlashBoxPart.CFrame = hrp.CFrame
                 FlashBoxPart.Transparency = 0.6
                 flashHighlight.Adornee = FlashBoxPart
                 flashBillboard.Adornee = FlashBoxPart
                 
-                -- تخزين الهدف
                 FlashBoxPart:SetAttribute("TargetPlayer", enemy.Name)
-                targetInBox = enemy
             else
                 FlashBoxPart.Transparency = 1
-                targetInBox = nil
             end
         else
             FlashBoxPart.Transparency = 1
-            targetInBox = nil
         end
     end)
 end)
 
 -- ============================================================
--- 15. R Key Detection (لتنفيذ Flash Step)
+-- 15. R Key Detection (Flash Step)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
-    -- عند الضغط على R
     if input.KeyCode == Enum.KeyCode.R then
-        -- التحقق من وجود هدف
         local target = FlashBoxPart:GetAttribute("TargetPlayer")
         if target then
             local targetPlayer = Players:FindFirstChild(target)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local myChar = LocalPlayer.Character
                 if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                    -- تنفيذ Flash Step
                     myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
                     
-                    -- إرسال زر R
                     pcall(function()
                         game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
                         task.wait(0.05)
@@ -796,4 +780,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-       
+        Title = "⚡ RyzHub v15.0",
+        Text = "Loaded! by mikey",
+        Duration = 5
+    })
+end)
+
+print("[RyzHub] v15.0 Loaded successfully! | by mikey")
