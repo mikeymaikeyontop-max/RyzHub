@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v8.0 (Matrix Design + Mobile Floating Button)
+-- ⚡ RYZHUB | v9.0 (Fixed ESP + Whitelist System)
 -- by mikey
 -- ============================================================
 
@@ -15,7 +15,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ============================================================
--- 1. الإعدادات
+-- 1. الإعدادات + قائمة التجاهل (Whitelist)
 -- ============================================================
 local Config = {
     SilentAim = false,
@@ -26,26 +26,20 @@ local Config = {
     FOVRadius = 150,
     AimRange = 300,
     Speed = 16,
-    Highlight = false,
-    Box = false,
-    BoxFill = false,
-    HealthBar = false,
-    Skeleton = false,
-    IgnoreTeam = false,
 }
 
-local IgnoreList = {}
+-- 🚫 قائمة التجاهل (Whitelist)
+local Whitelist = {}
 
-local function IsIgnored(player)
+local function IsWhitelisted(player)
     if not player then return true end
     if player == LocalPlayer then return true end
-    if IgnoreList[player.Name] then return true end
-    if Config.IgnoreTeam and player.Team == LocalPlayer.Team then return true end
+    if Whitelist[player.Name] then return true end
     return false
 end
 
 -- ============================================================
--- 2. الواجهة الرئيسية (تصميم Matrix)
+-- 2. الواجهة
 -- ============================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RyzHubUI"
@@ -53,10 +47,9 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- الإطار الرئيسي
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 500, 0, 320)
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -160)
+MainFrame.Size = UDim2.new(0, 500, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -72,7 +65,7 @@ stroke.Color = Color3.fromRGB(80, 80, 90)
 stroke.Thickness = 1
 stroke.Parent = MainFrame
 
--- شريط التبويبات العلوي
+-- شريط التبويبات
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, 0, 0, 30)
 TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -84,7 +77,6 @@ tbc.CornerRadius = UDim.new(0, 6)
 tbc.Parent = TabBar
 
 -- أزرار التبويبات
-local currentTab = nil
 local tabFrames = {}
 
 local function CreateTabButton(name, xPos)
@@ -107,13 +99,11 @@ local function CreateTabButton(name, xPos)
         end
         btn.TextColor3 = Color3.fromRGB(220, 220, 240)
     end)
-    
-    return btn
 end
 
 CreateTabButton("Aimbot", 0)
 CreateTabButton("Misc", 90)
-CreateTabButton("Settings", 180)
+CreateTabButton("Whitelist", 180)
 
 -- حاوية المحتوى
 local ContentFrame = Instance.new("Frame")
@@ -122,9 +112,6 @@ ContentFrame.Position = UDim2.new(0, 0, 0, 30)
 ContentFrame.BackgroundTransparency = 1
 ContentFrame.Parent = MainFrame
 
--- ============================================================
--- 3. إنشاء التبويبات
--- ============================================================
 local function CreateTabFrame(name)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, 0, 1, 0)
@@ -135,18 +122,13 @@ local function CreateTabFrame(name)
     return frame
 end
 
--- تبويب Aimbot
 local AimbotTab = CreateTabFrame("Aimbot")
 AimbotTab.Visible = true
-
--- تبويب Misc
 local MiscTab = CreateTabFrame("Misc")
-
--- تبويب Settings
-local SettingsTab = CreateTabFrame("Settings")
+local WhitelistTab = CreateTabFrame("Whitelist")
 
 -- ============================================================
--- 4. مكونات التصميم
+-- 3. مكونات التصميم
 -- ============================================================
 local function CreateSection(parent, title, xPos, yPos, width)
     local section = Instance.new("Frame")
@@ -208,46 +190,6 @@ local function CreateCheckbox(parent, text, yPos, callback)
             checkbox.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
         end
         callback(state)
-    end)
-end
-
-local function CreateDropdown(parent, text, options, yPos, callback)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 0, 25)
-    frame.Position = UDim2.new(0, 0, 0, yPos)
-    frame.BackgroundTransparency = 1
-    frame.Parent = parent
-    
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(0.5, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(200, 200, 210)
-    label.TextSize = 11
-    label.Font = Enum.Font.Gotham
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
-    
-    local selected = Instance.new("TextButton")
-    selected.Size = UDim2.new(0.5, 0, 1, 0)
-    selected.Position = UDim2.new(0.5, 0, 0, 0)
-    selected.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    selected.Text = options[1] or ""
-    selected.TextColor3 = Color3.fromRGB(220, 220, 240)
-    selected.TextSize = 11
-    selected.Font = Enum.Font.Gotham
-    selected.BorderSizePixel = 0
-    selected.Parent = frame
-    
-    local sc = Instance.new("UICorner")
-    sc.CornerRadius = UDim.new(0, 4)
-    sc.Parent = selected
-    
-    local currentIndex = 1
-    selected.MouseButton1Click:Connect(function()
-        currentIndex = currentIndex % #options + 1
-        selected.Text = options[currentIndex]
-        callback(options[currentIndex])
     end)
 end
 
@@ -324,102 +266,115 @@ local function CreateSlider(parent, text, minVal, maxVal, default, yPos, callbac
 end
 
 -- ============================================================
--- 5. محتوى تبويب Aimbot
+-- 4. محتوى تبويب Aimbot
 -- ============================================================
-local ESPColumn = CreateSection(AimbotTab, "ESP", 10, 0, 200)
+local ESPColumn = CreateSection(AimbotTab, "ESP", 10, 0, 220)
+CreateCheckbox(ESPColumn, "Enable ESP", 30, function(v) Config.ESP = v end)
+CreateCheckbox(ESPColumn, "Show Name", 55, function(v) end)
+CreateCheckbox(ESPColumn, "Show Distance", 80, function(v) end)
+CreateCheckbox(ESPColumn, "Show Health", 105, function(v) end)
 
-CreateCheckbox(ESPColumn, "Highlight", 30, function(v) Config.Highlight = v end)
-CreateCheckbox(ESPColumn, "AlwaysOnTop", 55, function(v) end)
-CreateCheckbox(ESPColumn, "Box", 80, function(v) Config.Box = v end)
-CreateCheckbox(ESPColumn, "Box Fill", 105, function(v) Config.BoxFill = v end)
-CreateCheckbox(ESPColumn, "HealthBar", 130, function(v) Config.HealthBar = v end)
-CreateCheckbox(ESPColumn, "Skeleton", 155, function(v) Config.Skeleton = v end)
-CreateCheckbox(ESPColumn, "Ignore Team", 180, function(v) Config.IgnoreTeam = v end)
-
--- زر إضافة للقائمة
-local addIgnoreBtn = Instance.new("TextButton")
-addIgnoreBtn.Size = UDim2.new(1, 0, 0, 20)
-addIgnoreBtn.Position = UDim2.new(0, 0, 0, 205)
-addIgnoreBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-addIgnoreBtn.Text = "Add Nearest to Ignore"
-addIgnoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-addIgnoreBtn.TextSize = 10
-addIgnoreBtn.Font = Enum.Font.GothamBold
-addIgnoreBtn.BorderSizePixel = 0
-addIgnoreBtn.Parent = ESPColumn
-
-local aic = Instance.new("UICorner")
-aic.CornerRadius = UDim.new(0, 4)
-aic.Parent = addIgnoreBtn
-
-addIgnoreBtn.MouseButton1Click:Connect(function()
-    local closest = nil
-    local minDist = math.huge
-    local myChar = LocalPlayer.Character
-    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
-    local myPos = myChar.HumanoidRootPart.Position
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local d = (myPos - hrp.Position).Magnitude
-                if d < minDist then minDist = d; closest = p end
-            end
-        end
-    end
-    if closest then
-        IgnoreList[closest.Name] = true
-        addIgnoreBtn.Text = "✅ Added: " .. closest.Name
-        task.wait(2)
-        addIgnoreBtn.Text = "Add Nearest to Ignore"
-    end
-end)
-
--- عمود Movement
-local MoveColumn = CreateSection(AimbotTab, "Movement", 230, 0, 250)
-
-CreateSlider(MoveColumn, "Speed", 16, 200, 16, 30, function(v)
+local MoveColumn = CreateSection(AimbotTab, "Movement", 250, 0, 240)
+CreateSlider(MoveColumn, "Walk Speed", 16, 200, 16, 30, function(v)
     Config.Speed = v
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = v
     end
 end)
 
-CreateCheckbox(MoveColumn, "Fly", 65, function(v) end)
-CreateCheckbox(MoveColumn, "Auto Strafe", 90, function(v) end)
-
-CreateDropdown(MoveColumn, "Speed Method", {"Normal", "Legit", "Fast"}, 115, function(v) end)
-
-CreateSlider(MoveColumn, "Fly Speed", 16, 200, 50, 145, function(v) end)
+CreateCheckbox(MoveColumn, "Noclip", 65, function(v) Config.Noclip = v end)
 
 -- ============================================================
--- 6. محتوى تبويب Misc
+-- 5. محتوى تبويب Misc
 -- ============================================================
 local MiscColumn = CreateSection(MiscTab, "Misc", 10, 0, 220)
 CreateCheckbox(MiscColumn, "Silent Aim", 30, function(v) Config.SilentAim = v end)
 CreateCheckbox(MiscColumn, "Show FOV", 55, function(v) Config.ShowFOV = v end)
-CreateCheckbox(MiscColumn, "Noclip", 80, function(v) Config.Noclip = v end)
-CreateCheckbox(MiscColumn, "Auto Flash (R)", 105, function(v) Config.AutoFlash = v end)
-
-CreateSlider(MiscColumn, "FOV Radius", 50, 500, 150, 130, function(v) Config.FOVRadius = v end)
-CreateSlider(MiscColumn, "Aim Range", 50, 500, 300, 165, function(v) Config.AimRange = v end)
+CreateCheckbox(MiscColumn, "Auto Flash (R)", 80, function(v) Config.AutoFlash = v end)
+CreateSlider(MiscColumn, "FOV Radius", 50, 500, 150, 105, function(v) Config.FOVRadius = v end)
+CreateSlider(MiscColumn, "Aim Range", 50, 500, 300, 140, function(v) Config.AimRange = v end)
 
 -- ============================================================
--- 7. محتوى تبويب Settings
+-- 6. محتوى تبويب Whitelist
 -- ============================================================
-local SettingsColumn = CreateSection(SettingsTab, "Settings", 10, 0, 300)
-CreateCheckbox(SettingsColumn, "Enable ESP", 30, function(v) Config.ESP = v end)
+local WhitelistColumn = CreateSection(WhitelistTab, "Whitelist (Ignored Players)", 10, 0, 480)
+
+local function RefreshPlayerList()
+    -- مسح القائمة القديمة
+    for _, child in ipairs(WhitelistColumn:GetChildren()) do
+        if child:IsA("TextButton") and child.Name ~= "AddBtn" then
+            child:Destroy()
+        end
+    end
+    
+    local y = 30
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 22)
+            btn.Position = UDim2.new(0, 0, 0, y)
+            btn.Text = (Whitelist[p.Name] and "✅ " or "❌ ") .. p.Name
+            btn.TextColor3 = Whitelist[p.Name] and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(200, 200, 200)
+            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+            btn.TextSize = 11
+            btn.Font = Enum.Font.Gotham
+            btn.BorderSizePixel = 0
+            btn.Parent = WhitelistColumn
+            
+            local c = Instance.new("UICorner")
+            c.CornerRadius = UDim.new(0, 4)
+            c.Parent = btn
+            
+            btn.MouseButton1Click:Connect(function()
+                if Whitelist[p.Name] then
+                    Whitelist[p.Name] = nil
+                    btn.Text = "❌ " .. p.Name
+                    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+                else
+                    Whitelist[p.Name] = true
+                    btn.Text = "✅ " .. p.Name
+                    btn.TextColor3 = Color3.fromRGB(100, 255, 100)
+                end
+            end)
+            
+            y = y + 25
+        end
+    end
+end
+
+RefreshPlayerList()
+
+-- زر تحديث القائمة
+local RefreshBtn = Instance.new("TextButton")
+RefreshBtn.Name = "AddBtn"
+RefreshBtn.Size = UDim2.new(1, 0, 0, 25)
+RefreshBtn.Position = UDim2.new(0, 0, 1, -30)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
+RefreshBtn.Text = "🔄 Refresh Player List"
+RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+RefreshBtn.TextSize = 11
+RefreshBtn.Font = Enum.Font.GothamBold
+RefreshBtn.BorderSizePixel = 0
+RefreshBtn.Parent = WhitelistColumn
+
+local rbc = Instance.new("UICorner")
+rbc.CornerRadius = UDim.new(0, 4)
+rbc.Parent = RefreshBtn
+
+RefreshBtn.MouseButton1Click:Connect(RefreshPlayerList)
 
 -- ============================================================
--- 8. Floating Button (للجوال)
+-- 7. Floating Button (للجوال)
 -- ============================================================
-local FloatingBtn = Instance.new("ImageButton")
+local FloatingBtn = Instance.new("TextButton")
 FloatingBtn.Name = "FloatingButton"
 FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
 FloatingBtn.Position = UDim2.new(0, 20, 0.5, -25)
 FloatingBtn.BackgroundColor3 = Color3.fromRGB(153, 68, 255)
-FloatingBtn.Image = "rbxassetid://11270029456" -- يمكنك تغيير الصورة
-FloatingBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+FloatingBtn.Text = "⚡"
+FloatingBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatingBtn.TextSize = 24
+FloatingBtn.Font = Enum.Font.GothamBold
 FloatingBtn.BorderSizePixel = 0
 FloatingBtn.ZIndex = 1000
 FloatingBtn.Parent = ScreenGui
@@ -428,7 +383,6 @@ local fbc = Instance.new("UICorner")
 fbc.CornerRadius = UDim.new(1, 0)
 fbc.Parent = FloatingBtn
 
--- جعل الزر قابلاً للسحب
 local dragging = false
 local dragStart, startPos
 
@@ -453,7 +407,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- عند الضغط على الزر: إخفاء/إظهار الواجهة
 local uiVisible = true
 FloatingBtn.MouseButton1Click:Connect(function()
     uiVisible = not uiVisible
@@ -461,27 +414,7 @@ FloatingBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 9. اختصارات الكيبورد (F4 للإخفاء، F7 للإغلاق)
--- ============================================================
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    
-    if input.KeyCode == Enum.KeyCode.F4 then
-        MainFrame.Visible = not MainFrame.Visible
-    end
-    
-    if input.KeyCode == Enum.KeyCode.F7 then
-        Config.SilentAim = false
-        Config.ESP = false
-        Config.ShowFOV = false
-        Config.Noclip = false
-        if ScreenGui then ScreenGui:Destroy() end
-        getgenv().RyzHubLoaded = false
-    end
-end)
-
--- ============================================================
--- 10. FOV Circle
+-- 8. FOV Circle
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
@@ -501,17 +434,70 @@ fovStroke.Thickness = 1.5
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 11. ESP Folder
+-- 9. ESP Folder
 -- ============================================================
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "RyzHubESP"
 ESPFolder.Parent = ScreenGui
 
 -- ============================================================
--- 12. الحلقة الرئيسية
+-- 10. دالة ESP (مصلحة)
+-- ============================================================
+local espCache = {}
+
+local function CreateESP(player)
+    if espCache[player] then return end
+    if not player.Character then return end
+    local head = player.Character:FindFirstChild("Head")
+    if not head then return end
+    
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = player.Name
+    billboard.Size = UDim2.new(0, 120, 0, 40)
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Adornee = head
+    billboard.Parent = ESPFolder
+    
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Name = "NameLabel"
+    nameLabel.Size = UDim2.new(1, 0, 0, 20)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player.Name
+    nameLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+    nameLabel.TextSize = 12
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.Parent = billboard
+    
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Name = "DistLabel"
+    distLabel.Size = UDim2.new(1, 0, 0, 20)
+    distLabel.Position = UDim2.new(0, 0, 0, 20)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Text = "0m"
+    distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    distLabel.TextSize = 10
+    distLabel.Font = Enum.Font.Gotham
+    distLabel.TextStrokeTransparency = 0
+    distLabel.Parent = billboard
+    
+    espCache[player] = billboard
+end
+
+local function RemoveESP(player)
+    if espCache[player] then
+        espCache[player]:Destroy()
+        espCache[player] = nil
+    end
+end
+
+-- ============================================================
+-- 11. الحلقة الرئيسية
 -- ============================================================
 task.spawn(function()
     while ScreenGui.Parent do
+        -- FOV Circle
         if Config.ShowFOV then
             FOVFrame.Visible = true
             local mouse = UserInputService:GetMouseLocation()
@@ -521,6 +507,7 @@ task.spawn(function()
             FOVFrame.Visible = false
         end
         
+        -- Noclip
         if Config.Noclip then
             local char = LocalPlayer.Character
             if char then
@@ -532,48 +519,42 @@ task.spawn(function()
             end
         end
         
+        -- ESP
         if Config.ESP then
             for _, p in ipairs(Players:GetPlayers()) do
-                if not IsIgnored(p) and p.Character and p.Character:FindFirstChild("Head") then
-                    if not ESPFolder:FindFirstChild(p.Name) then
-                        local bb = Instance.new("BillboardGui")
-                        bb.Name = p.Name
-                        bb.Size = UDim2.new(0, 100, 0, 30)
-                        bb.AlwaysOnTop = true
-                        bb.Adornee = p.Character.Head
-                        bb.Parent = ESPFolder
-                        
-                        local txt = Instance.new("TextLabel")
-                        txt.Size = UDim2.new(1, 0, 1, 0)
-                        txt.BackgroundTransparency = 1
-                        txt.Text = p.Name
-                        txt.TextColor3 = Color3.fromRGB(255, 50, 50)
-                        txt.TextSize = 11
-                        txt.Font = Enum.Font.GothamBold
-                        txt.TextStrokeTransparency = 0
-                        txt.Parent = bb
-                    end
+                if not IsWhitelisted(p) and p.Character then
+                    CreateESP(p)
                 end
             end
             
-            for _, bb in ipairs(ESPFolder:GetChildren()) do
-                local plr = Players:FindFirstChild(bb.Name)
-                if not plr or IsIgnored(plr) or not plr.Character then
-                    bb:Destroy()
+            -- تحديث المسافات وحذف اللاعبين
+            for player, gui in pairs(espCache) do
+                if IsWhitelisted(player) or not player.Character or not player.Character:FindFirstChild("Head") then
+                    RemoveESP(player)
+                else
+                    local myChar = LocalPlayer.Character
+                    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                        local dist = (myChar.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                        local distLabel = gui:FindFirstChild("DistLabel")
+                        if distLabel then
+                            distLabel.Text = math.floor(dist) .. "m"
+                        end
+                    end
                 end
             end
         else
-            for _, bb in ipairs(ESPFolder:GetChildren()) do
-                bb:Destroy()
+            -- إزالة كل ESP
+            for player, gui in pairs(espCache) do
+                RemoveESP(player)
             end
         end
         
-        task.wait(0.1)
+        task.wait(0.15)
     end
 end)
 
 -- ============================================================
--- 13. Auto Flash Step
+-- 12. Auto Flash Step
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
@@ -584,7 +565,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
         if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
         local myPos = myChar.HumanoidRootPart.Position
         for _, p in ipairs(Players:GetPlayers()) do
-            if not IsIgnored(p) and p.Character then
+            if not IsWhitelisted(p) and p.Character then
                 local hrp = p.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
                     local d = (myPos - hrp.Position).Magnitude
@@ -599,14 +580,32 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 -- ============================================================
+-- 13. اختصارات الكيبورد
+-- ============================================================
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.F4 then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+    if input.KeyCode == Enum.KeyCode.F7 then
+        Config.SilentAim = false
+        Config.ESP = false
+        Config.ShowFOV = false
+        Config.Noclip = false
+        if ScreenGui then ScreenGui:Destroy() end
+        getgenv().RyzHubLoaded = false
+    end
+end)
+
+-- ============================================================
 -- 14. إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v8.0",
-        Text = "Loaded! Tap the floating button to toggle UI.",
+        Title = "⚡ RyzHub v9.0",
+        Text = "Loaded! Whitelist system active.",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v8.0 Loaded successfully!")
+print("[RyzHub] v9.0 Loaded successfully!")
