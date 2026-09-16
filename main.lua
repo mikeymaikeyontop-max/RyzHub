@@ -1,10 +1,10 @@
 -- ============================================================
--- ⚡ RYZHUB | v6.0 (Full Edition)
+-- ⚡ RYZHUB | v7.0 (Mobile Lite Edition)
 -- by mikey
--- FOV + Silent Aim + ESP + Auto Flash Step + Noclip + Ignore List
+-- خفيف جداً + متوافق مع الهواتف + Ignore List
 -- ============================================================
 
-print("[RyzHub] Loading...")
+print("[RyzHub] Loading Lite Edition...")
 
 if getgenv().RyzHubLoaded then return end
 getgenv().RyzHubLoaded = true
@@ -12,198 +12,207 @@ getgenv().RyzHubLoaded = true
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 -- ============================================================
--- 🔐 1. قائمة التجاهل (Ignore List)
+-- 🔐 1. قائمة التجاهل
 -- ============================================================
-local IgnoreList = {
-    -- ["PlayerName1"] = true,
-}
-local IgnoreIDs = {
-    -- [123456789] = true,
-}
+local IgnoreList = {}
 
 local function IsIgnored(player)
     if not player then return true end
     if player == LocalPlayer then return true end
     if IgnoreList[player.Name] then return true end
-    if IgnoreIDs[player.UserId] then return true end
     return false
 end
 
 -- ============================================================
--- 2. تحميل Rayfield UI
--- ============================================================
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
--- ============================================================
--- 3. الإعدادات
+-- 2. الإعدادات
 -- ============================================================
 local Config = {
     SilentAim = false,
-    Aimbot = false,
     ESP = false,
     ShowFOV = false,
     Noclip = false,
     AutoFlash = false,
     FOVRadius = 150,
     AimRange = 300,
-    Smoothness = 0.5,
     Speed = 16,
 }
 
 -- ============================================================
--- 4. إنشاء النافذة
+-- 3. الواجهة (خفيفة جداً - بدون مكتبات خارجية)
 -- ============================================================
-local Window = Rayfield:CreateWindow({
-    Name = "⚡ RYZHUB v6.0 | by mikey",
-    LoadingTitle = "RyzHub Loading...",
-    LoadingSubtitle = "by mikey",
-    ConfigurationSaving = { Enabled = false },
-    Discord = { Enabled = false },
-    KeySystem = false,
-})
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RyzHubUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- الإطار الرئيسي
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 200, 0, 300)
+MainFrame.Position = UDim2.new(0, 10, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BackgroundTransparency = 0.1
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = MainFrame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(153, 68, 255)
+stroke.Thickness = 1
+stroke.Parent = MainFrame
+
+-- العنوان
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+Title.Text = "⚡ RYZHUB v7.0"
+Title.TextColor3 = Color3.fromRGB(153, 68, 255)
+Title.TextSize = 13
+Title.Font = Enum.Font.GothamBold
+Title.BorderSizePixel = 0
+Title.Parent = MainFrame
+
+local tc = Instance.new("UICorner")
+tc.CornerRadius = UDim.new(0, 8)
+tc.Parent = Title
+
+-- زر الإغلاق
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+CloseBtn.Position = UDim2.new(1, -28, 0, 4)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 14
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Parent = MainFrame
+
+local cc = Instance.new("UICorner")
+cc.CornerRadius = UDim.new(0, 5)
+cc.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+    if ESPFolder then ESPFolder:Destroy() end
+    if FOVFrame then FOVFrame:Destroy() end
+    getgenv().RyzHubLoaded = false
+end)
 
 -- ============================================================
--- 5. تبويب Main
+-- 4. دالة Toggle خفيفة
 -- ============================================================
-local MainTab = Window:CreateTab("Main", nil)
+local currentY = 40
 
-MainTab:CreateToggle({
-    Name = "Silent Aim (No Camera Move)",
-    CurrentValue = false,
-    Flag = "SilentAim",
-    Callback = function(Value) Config.SilentAim = Value end,
-})
-
-MainTab:CreateToggle({
-    Name = "Show FOV Circle (Follows Mouse)",
-    CurrentValue = false,
-    Flag = "ShowFOV",
-    Callback = function(Value) Config.ShowFOV = Value end,
-})
-
-MainTab:CreateToggle({
-    Name = "Player ESP",
-    CurrentValue = false,
-    Flag = "ESP",
-    Callback = function(Value)
-        Config.ESP = Value
-        if not Value then
-            for _, v in pairs(ESPFolder:GetChildren()) do
-                v:Destroy()
-            end
+local function CreateToggle(text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -16, 0, 28)
+    btn.Position = UDim2.new(0, 8, 0, currentY)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    btn.Text = "❌ " .. text
+    btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+    btn.TextSize = 11
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.Parent = MainFrame
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 5)
+    c.Parent = btn
+    
+    local state = false
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        if state then
+            btn.Text = "✅ " .. text
+            btn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
+        else
+            btn.Text = "❌ " .. text
+            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
         end
-    end,
-})
-
-MainTab:CreateToggle({
-    Name = "Noclip",
-    CurrentValue = false,
-    Flag = "Noclip",
-    Callback = function(Value) Config.Noclip = Value end,
-})
-
-MainTab:CreateToggle({
-    Name = "Auto Flash Step (Press R)",
-    CurrentValue = false,
-    Flag = "AutoFlash",
-    Callback = function(Value) Config.AutoFlash = Value end,
-})
-
-MainTab:CreateSlider({
-    Name = "FOV Radius",
-    Range = {50, 500},
-    Increment = 1,
-    Suffix = "px",
-    CurrentValue = 150,
-    Flag = "FOVRadius",
-    Callback = function(Value) Config.FOVRadius = Value end,
-})
-
-MainTab:CreateSlider({
-    Name = "Aim Range",
-    Range = {50, 500},
-    Increment = 1,
-    Suffix = "studs",
-    CurrentValue = 300,
-    Flag = "AimRange",
-    Callback = function(Value) Config.AimRange = Value end,
-})
-
-MainTab:CreateSlider({
-    Name = "Walk Speed",
-    Range = {16, 200},
-    Increment = 1,
-    Suffix = "speed",
-    CurrentValue = 16,
-    Flag = "WalkSpeed",
-    Callback = function(Value)
-        Config.Speed = Value
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = Value
-        end
-    end,
-})
-
--- ============================================================
--- 6. تبويب Ignore List
--- ============================================================
-local IgnoreTab = Window:CreateTab("🚫 Ignore List", nil)
-
-IgnoreTab:CreateSection("Players in Server")
-
-local playerList = {}
-for _, p in ipairs(Players:GetPlayers()) do
-    if p ~= LocalPlayer then
-        table.insert(playerList, p.Name)
-    end
+        callback(state)
+    end)
+    
+    currentY = currentY + 32
 end
 
-local selectedPlayer = nil
+-- ============================================================
+-- 5. العناصر
+-- ============================================================
+CreateToggle("Silent Aim", function(v) Config.SilentAim = v end)
+CreateToggle("Player ESP", function(v)
+    Config.ESP = v
+    if not v and ESPFolder then
+        for _, x in pairs(ESPFolder:GetChildren()) do x:Destroy() end
+    end
+end)
+CreateToggle("Show FOV", function(v) Config.ShowFOV = v end)
+CreateToggle("Noclip", function(v) Config.Noclip = v end)
+CreateToggle("Auto Flash (R)", function(v) Config.AutoFlash = v end)
+CreateToggle("Speed Boost", function(v)
+    Config.Speed = v and 100 or 16
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = Config.Speed
+    end
+end)
 
-IgnoreTab:CreateDropdown({
-    Name = "Select Player",
-    Options = playerList,
-    CurrentOption = "",
-    MultipleOptions = false,
-    Flag = "PlayerDropdown",
-    Callback = function(Option) selectedPlayer = Option end,
-})
+-- زر إضافة لاعب للقائمة
+local AddIgnoreBtn = Instance.new("TextButton")
+AddIgnoreBtn.Size = UDim2.new(1, -16, 0, 28)
+AddIgnoreBtn.Position = UDim2.new(0, 8, 0, currentY)
+AddIgnoreBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+AddIgnoreBtn.Text = "🚫 Add Nearest to Ignore"
+AddIgnoreBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AddIgnoreBtn.TextSize = 10
+AddIgnoreBtn.Font = Enum.Font.GothamBold
+AddIgnoreBtn.BorderSizePixel = 0
+AddIgnoreBtn.Parent = MainFrame
 
-IgnoreTab:CreateButton({
-    Name = "🚫 Add to Ignore List",
-    Callback = function()
-        if selectedPlayer then
-            IgnoreList[selectedPlayer] = true
-            Rayfield:Notify({
-                Title = "🚫 Ignore List",
-                Content = selectedPlayer .. " added!",
-                Duration = 3,
-            })
+local aic = Instance.new("UICorner")
+aic.CornerRadius = UDim.new(0, 5)
+aic.Parent = AddIgnoreBtn
+
+AddIgnoreBtn.MouseButton1Click:Connect(function()
+    local closest = nil
+    local minDist = math.huge
+    local myChar = LocalPlayer.Character
+    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
+    local myPos = myChar.HumanoidRootPart.Position
+    
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local d = (myPos - hrp.Position).Magnitude
+                if d < minDist then
+                    minDist = d
+                    closest = p
+                end
+            end
         end
-    end,
-})
+    end
+    
+    if closest then
+        IgnoreList[closest.Name] = true
+        AddIgnoreBtn.Text = "✅ Added: " .. closest.Name
+        task.wait(2)
+        AddIgnoreBtn.Text = "🚫 Add Nearest to Ignore"
+    end
+end)
 
-IgnoreTab:CreateButton({
-    Name = "✅ Remove from Ignore List",
-    Callback = function()
-        if selectedPlayer and IgnoreList[selectedPlayer] then
-            IgnoreList[selectedPlayer] = nil
-            Rayfield:Notify({
-                Title = "✅ Removed",
-                Content = selectedPlayer .. " removed!",
-                Duration = 3,
-            })
-        end
-    end,
-})
+currentY = currentY + 32
 
 -- ============================================================
--- 7. FOV Circle (يتبع الماوس)
+-- 6. FOV Circle (يتبع الماوس - خفيف)
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Name = "FOVCircle"
@@ -212,7 +221,7 @@ FOVFrame.BackgroundTransparency = 1
 FOVFrame.BorderSizePixel = 0
 FOVFrame.Visible = false
 FOVFrame.ZIndex = 999
-FOVFrame.Parent = game:GetService("CoreGui")
+FOVFrame.Parent = ScreenGui
 
 local fovCorner = Instance.new("UICorner")
 fovCorner.CornerRadius = UDim.new(1, 0)
@@ -220,25 +229,18 @@ fovCorner.Parent = FOVFrame
 
 local fovStroke = Instance.new("UIStroke")
 fovStroke.Color = Color3.fromRGB(153, 68, 255)
-fovStroke.Thickness = 2
+fovStroke.Thickness = 1.5
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 8. ESP Folder
+-- 7. ESP Folder
 -- ============================================================
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "RyzHubESP"
-ESPFolder.Parent = game:GetService("CoreGui")
+ESPFolder.Parent = ScreenGui
 
 -- ============================================================
--- 9. الحصول على موقع الماوس
--- ============================================================
-local UserInputService = game:GetService("UserInputService")
-local mouseLocation = Vector2.new(0, 0)
-local mouse = LocalPlayer:GetMouse()
-
--- ============================================================
--- 10. دالة الحصول على أقرب عدو
+-- 8. الحصول على العدو الأقرب
 -- ============================================================
 local function GetClosestEnemy()
     local char = LocalPlayer.Character
@@ -246,15 +248,15 @@ local function GetClosestEnemy()
     local myPos = char.HumanoidRootPart.Position
     local closest = nil
     local minDist = Config.AimRange
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if not IsIgnored(player) and player.Character then
-            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+    
+    for _, p in ipairs(Players:GetPlayers()) do
+        if not IsIgnored(p) and p.Character then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
             if hrp then
-                local dist = (myPos - hrp.Position).Magnitude
-                if dist < minDist then
-                    minDist = dist
-                    closest = player
+                local d = (myPos - hrp.Position).Magnitude
+                if d < minDist then
+                    minDist = d
+                    closest = p
                 end
             end
         end
@@ -263,39 +265,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 11. دالة الحصول على العدو في FOV
--- ============================================================
-local function GetEnemyInFOV()
-    local char = LocalPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then return nil end
-    local myPos = char.HumanoidRootPart.Position
-    local closest = nil
-    local minDist = Config.AimRange
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        if not IsIgnored(player) and player.Character then
-            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-            local head = player.Character:FindFirstChild("Head")
-            if hrp and head then
-                local dist = (myPos - hrp.Position).Magnitude
-                if dist < minDist then
-                    local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                    if onScreen then
-                        local fovDist = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
-                        if fovDist <= Config.FOVRadius then
-                            minDist = dist
-                            closest = player
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return closest
-end
-
--- ============================================================
--- 12. ESP
+-- 9. ESP (خفيف)
 -- ============================================================
 local espCache = {}
 
@@ -305,146 +275,99 @@ local function CreateESP(player)
     if not char then return end
     local head = char:FindFirstChild("Head")
     if not head then return end
-
+    
     local billboard = Instance.new("BillboardGui")
-    billboard.Name = player.Name
-    billboard.Size = UDim2.new(0, 100, 0, 50)
+    billboard.Size = UDim2.new(0, 80, 0, 20)
     billboard.AlwaysOnTop = true
     billboard.Adornee = head
     billboard.Parent = ESPFolder
-
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 0, 20)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = player.Name
-    nameLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-    nameLabel.TextSize = 12
-    nameLabel.Font = Enum.Font.GothamBold
-    nameLabel.TextStrokeTransparency = 0
-    nameLabel.Parent = billboard
-
-    local distLabel = Instance.new("TextLabel")
-    distLabel.Size = UDim2.new(1, 0, 0, 20)
-    distLabel.Position = UDim2.new(0, 0, 0, 20)
-    distLabel.BackgroundTransparency = 1
-    distLabel.Text = "0m"
-    distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    distLabel.TextSize = 10
-    distLabel.Font = Enum.Font.Gotham
-    distLabel.TextStrokeTransparency = 0
-    distLabel.Parent = billboard
-
-    espCache[player] = {billboard = billboard, distLabel = distLabel}
+    
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 1, 0)
+    text.BackgroundTransparency = 1
+    text.Text = player.Name
+    text.TextColor3 = Color3.fromRGB(255, 50, 50)
+    text.TextSize = 11
+    text.Font = Enum.Font.GothamBold
+    text.TextStrokeTransparency = 0
+    text.Parent = billboard
+    
+    espCache[player] = billboard
 end
 
 -- ============================================================
--- 13. دالة إرسال الضربة (Flash Step)
+-- 10. الحلقة الرئيسية (خفيفة - 10 FPS بدلاً من 60)
 -- ============================================================
-local function SendKey(key)
-    pcall(function()
-        VirtualInputManager:SendKeyEvent(true, key, false, game)
-        task.wait(0.05)
-        VirtualInputManager:SendKeyEvent(false, key, false, game)
-    end)
-end
-
--- ============================================================
--- 14. الحلقة الرئيسية
--- ============================================================
-RunService.RenderStepped:Connect(function()
-    -- تحديث موقع الماوس
-    mouseLocation = UserInputService:GetMouseLocation()
-
-    -- FOV Circle (يتبع الماوس)
-    if FOVFrame then
-        FOVFrame.Visible = Config.ShowFOV
-        FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
-        FOVFrame.Position = UDim2.new(0, mouseLocation.X - Config.FOVRadius, 0, mouseLocation.Y - Config.FOVRadius)
-    end
-
-    -- Silent Aim (بدون تحريك الكاميرا)
-    if Config.SilentAim then
-        local enemy = GetEnemyInFOV()
-        if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
-            -- إرسال ضربة نحو العدو (بدون تحريك الكاميرا)
-            -- ملاحظة: هذا يعتمد على أن اللعبة تستخدم "Lock On" target
-            -- يمكنك تعديل هذا الجزء حسب آلية اللعبة
+task.spawn(function()
+    while ScreenGui.Parent do
+        -- FOV Circle يتبع الماوس
+        if FOVFrame then
+            FOVFrame.Visible = Config.ShowFOV
+            if Config.ShowFOV then
+                local mouse = UserInputService:GetMouseLocation()
+                FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
+                FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
+            end
         end
-    end
-
-    -- Noclip
-    if Config.Noclip then
-        local char = LocalPlayer.Character
-        if char then
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") and part.CanCollide then
-                    part.CanCollide = false
+        
+        -- Noclip
+        if Config.Noclip then
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then
+                        part.CanCollide = false
+                    end
                 end
             end
         end
-    end
-
-    -- ESP
-    if Config.ESP then
-        for _, player in ipairs(Players:GetPlayers()) do
-            if not IsIgnored(player) and player.Character then
-                CreateESP(player)
-            end
-        end
-
-        for player, data in pairs(espCache) do
-            if IsIgnored(player) then
-                data.billboard:Destroy()
-                espCache[player] = nil
-            elseif player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local myChar = LocalPlayer.Character
-                if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                    local dist = (myChar.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                    data.distLabel.Text = math.floor(dist) .. "m"
+        
+        -- ESP
+        if Config.ESP then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if not IsIgnored(p) and p.Character then
+                    CreateESP(p)
                 end
-            else
-                data.billboard:Destroy()
-                espCache[player] = nil
+            end
+            
+            for player, gui in pairs(espCache) do
+                if IsIgnored(player) or not player.Character then
+                    gui:Destroy()
+                    espCache[player] = nil
+                end
             end
         end
-    else
-        for player, data in pairs(espCache) do
-            data.billboard:Destroy()
-            espCache[player] = nil
-        end
+        
+        task.wait(0.1) -- 10 FPS (خفيف جداً)
     end
 end)
 
 -- ============================================================
--- 15. Auto Flash Step (عند الضغط على R)
+-- 11. Auto Flash Step (عند الضغط على R)
 -- ============================================================
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
     if input.KeyCode == Enum.KeyCode.R and Config.AutoFlash then
         local enemy = GetClosestEnemy()
         if enemy and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
             local myChar = LocalPlayer.Character
             if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                -- الدوران نحو العدو
                 local targetPos = enemy.Character.HumanoidRootPart.Position
                 myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPos)
-                -- إرسال Flash Step
-                task.wait(0.05)
-                SendKey("R")
-                print("[RyzHub] Flash Step → " .. enemy.Name)
             end
         end
     end
 end)
 
 -- ============================================================
--- 16. إشعار
+-- 12. إشعار
 -- ============================================================
-Rayfield:Notify({
-    Title = "⚡ RyzHub v6.0",
-    Content = "Loaded! FOV + Silent Aim + Auto Flash Step!",
-    Duration = 5,
-})
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "⚡ RyzHub v7.0",
+        Text = "Mobile Lite Edition Loaded!",
+        Duration = 3
+    })
+end)
 
-print("[RyzHub] v6.0 Loaded successfully! | by mikey")
+print("[RyzHub] v7.0 Lite Loaded successfully!")
