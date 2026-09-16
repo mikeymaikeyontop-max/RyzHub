@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v12.0 (Full Combat Edition)
+-- ⚡ RYZHUB | v13.0 (Stable Edition)
 -- by mikey
 -- Combat + ESP + Silent Aim + Fly + Macro + Blacklist
 -- ============================================================
@@ -12,7 +12,6 @@ getgenv().RyzHubLoaded = true
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -20,7 +19,6 @@ local Camera = workspace.CurrentCamera
 -- 1. الإعدادات
 -- ============================================================
 local Config = {
-    -- Combat
     SilentAim = false,
     ESP = false,
     ShowFOV = false,
@@ -34,12 +32,8 @@ local Config = {
     SmartAutoV3 = false,
     SoruMechanics = false,
     JumpMacro = false,
-    
-    -- UI
     FFlagConfig = false,
     ReducedESP = false,
-    
-    -- Settings
     FOVRadius = 150,
     AimRange = 300,
     Speed = 16,
@@ -56,42 +50,15 @@ local function IsBlacklisted(player)
 end
 
 -- ============================================================
--- 2. FFlag Config (لتحسين الأداء)
+-- 2. الواجهة
 -- ============================================================
-local function ApplyFFlagConfig()
-    if not Config.FFlagConfig then return end
-    
-    local fflags = {
-        ["FFlagDebugGraphicsPreferD3D11"] = true,
-        ["FFlagDebugGraphicsDisableDirect3D11"] = false,
-        ["FFlagRenderFixFog"] = true,
-        ["FFlagRenderNoLowFrm"] = true,
-        ["DFIntTaskSchedulerTargetFps"] = 240,
-        ["FFlagTaskSchedulerBlockingWait"] = true,
-        ["FFlagRenderGuiOptimize"] = true,
-        ["FFlagRenderGuiUpdateOptimize"] = true,
-        ["FFlagDebugDisplayFPS"] = true,
-    }
-    
-    for flag, value in pairs(fflags) do
-        pcall(function()
-            if setfflag then
-                setfflag(flag, tostring(value))
-            end
-        end)
-    end
-end
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-ApplyFFlagConfig()
-
--- ============================================================
--- 3. الواجهة
--- ============================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RyzHubUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = PlayerGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 550, 0, 420)
@@ -111,7 +78,6 @@ stroke.Color = Color3.fromRGB(80, 80, 90)
 stroke.Thickness = 1
 stroke.Parent = MainFrame
 
--- شريط التبويبات
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, 0, 0, 30)
 TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -149,8 +115,7 @@ end
 CreateTabButton("Combat", 0)
 CreateTabButton("ESP", 90)
 CreateTabButton("Misc", 180)
-CreateTabButton("Settings", 270)
-CreateTabButton("Blacklist", 360)
+CreateTabButton("Blacklist", 270)
 
 local ContentFrame = Instance.new("Frame")
 ContentFrame.Size = UDim2.new(1, 0, 1, -30)
@@ -172,11 +137,10 @@ local CombatTab = CreateTabFrame("Combat")
 CombatTab.Visible = true
 local ESPTab = CreateTabFrame("ESP")
 local MiscTab = CreateTabFrame("Misc")
-local SettingsTab = CreateTabFrame("Settings")
 local BlacklistTab = CreateTabFrame("Blacklist")
 
 -- ============================================================
--- 4. دوال مساعدة
+-- 3. دوال مساعدة
 -- ============================================================
 local function CreateSection(parent, title, xPos, yPos, width)
     local section = Instance.new("Frame")
@@ -314,14 +278,14 @@ local function CreateSlider(parent, text, minVal, maxVal, default, yPos, callbac
 end
 
 -- ============================================================
--- 5. تبويب Combat
+-- 4. تبويب Combat
 -- ============================================================
 local CombatCol1 = CreateSection(CombatTab, "Combat Skills", 10, 5, 250)
 CreateCheckbox(CombatCol1, "Silent Aim", 30, function(v) Config.SilentAim = v end)
 CreateCheckbox(CombatCol1, "Aimlock", 55, function(v) Config.Aimlock = v end)
 CreateCheckbox(CombatCol1, "Mouse Lock", 80, function(v) Config.MouseLock = v end)
 CreateCheckbox(CombatCol1, "Auto Flash (R)", 105, function(v) Config.AutoFlash = v end)
-CreateCheckbox(CombatCol1, "Anti-Stun (Unbreakable)", 130, function(v) Config.AntiStun = v end)
+CreateCheckbox(CombatCol1, "Anti-Stun", 130, function(v) Config.AntiStun = v end)
 CreateCheckbox(CombatCol1, "Hitbox System", 155, function(v) Config.Hitbox = v end)
 CreateCheckbox(CombatCol1, "Smart Auto V3 (Ghoul)", 180, function(v) Config.SmartAutoV3 = v end)
 CreateCheckbox(CombatCol1, "Soru Mechanics", 205, function(v) Config.SoruMechanics = v end)
@@ -333,17 +297,14 @@ CreateSlider(CombatCol2, "Aim Range", 50, 500, 300, 65, function(v) Config.AimRa
 CreateCheckbox(CombatCol2, "Show FOV", 100, function(v) Config.ShowFOV = v end)
 
 -- ============================================================
--- 6. تبويب ESP
+-- 5. تبويب ESP
 -- ============================================================
 local ESPCol = CreateSection(ESPTab, "ESP Settings", 10, 5, 520)
 CreateCheckbox(ESPCol, "Enable ESP", 30, function(v) Config.ESP = v end)
-CreateCheckbox(ESPCol, "Show Name", 55, function(v) end)
-CreateCheckbox(ESPCol, "Show Distance", 80, function(v) end)
-CreateCheckbox(ESPCol, "Reduced Detail (Better Performance)", 105, function(v) Config.ReducedESP = v end)
-CreateCheckbox(ESPCol, "Improved Positioning", 130, function(v) end)
+CreateCheckbox(ESPCol, "Reduced Detail (Better Performance)", 55, function(v) Config.ReducedESP = v end)
 
 -- ============================================================
--- 7. تبويب Misc
+-- 6. تبويب Misc
 -- ============================================================
 local MiscCol1 = CreateSection(MiscTab, "Movement", 10, 5, 250)
 CreateSlider(MiscCol1, "Walk Speed", 16, 200, 16, 30, function(v)
@@ -357,18 +318,7 @@ CreateCheckbox(MiscCol1, "Fly (F)", 90, function(v) Config.Fly = v end)
 CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 115, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
--- 8. تبويب Settings
--- ============================================================
-local SettingsCol = CreateSection(SettingsTab, "UI Settings", 10, 5, 520)
-CreateCheckbox(SettingsCol, "FFlag Config (Better Performance)", 30, function(v) 
-    Config.FFlagConfig = v 
-    if v then ApplyFFlagConfig() end
-end)
-CreateCheckbox(SettingsCol, "Optimized Performance", 55, function(v) end)
-CreateCheckbox(SettingsCol, "Improved ESP Detail", 80, function(v) end)
-
--- ============================================================
--- 9. تبويب Blacklist
+-- 7. تبويب Blacklist
 -- ============================================================
 local BlacklistScroll = Instance.new("ScrollingFrame")
 BlacklistScroll.Size = UDim2.new(1, -20, 1, -40)
@@ -441,7 +391,7 @@ rbc.Parent = RefreshBtn
 RefreshBtn.MouseButton1Click:Connect(RefreshPlayerList)
 
 -- ============================================================
--- 10. Floating Button
+-- 8. Floating Button
 -- ============================================================
 local FloatingBtn = Instance.new("TextButton")
 FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -488,7 +438,7 @@ FloatingBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 11. FOV Circle
+-- 9. FOV Circle
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
@@ -521,7 +471,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 12. ESP
+-- 10. ESP
 -- ============================================================
 local espCache = {}
 
@@ -547,7 +497,7 @@ local function CreateESP(player)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
     billboard.Adornee = head
-    billboard.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    billboard.Parent = PlayerGui
     
     local nameLabel = Instance.new("TextLabel")
     nameLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -572,7 +522,7 @@ local function RemoveESP(player)
 end
 
 -- ============================================================
--- 13. GetClosestEnemy
+-- 11. GetClosestEnemy
 -- ============================================================
 local function GetClosestEnemy()
     local closest = nil
@@ -596,11 +546,10 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 14. Fly + Hitbox + Smart Auto V3
+-- 12. Fly
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
-        -- Fly
         if Config.Fly then
             local char = LocalPlayer.Character
             if char and char:FindFirstChild("HumanoidRootPart") then
@@ -636,61 +585,11 @@ RunService.RenderStepped:Connect(function()
                 if bv then bv:Destroy() end
             end
         end
-        
-        -- Hitbox
-        if Config.Hitbox then
-            for _, p in ipairs(Players:GetPlayers()) do
-                if not IsBlacklisted(p) and p.Character then
-                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        hrp.Size = Vector3.new(20, 20, 20)
-                        hrp.Transparency = 0.5
-                        hrp.CanCollide = false
-                        hrp.Massless = true
-                    end
-                end
-            end
-        end
-        
-        -- Smart Auto V3 (Ghoul race)
-        if Config.SmartAutoV3 then
-            local enemy = GetClosestEnemy()
-            if enemy and enemy.Character then
-                local hrp = enemy.Character:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local myChar = LocalPlayer.Character
-                    if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                        myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, hrp.Position)
-                    end
-                end
-            end
-        end
     end)
 end)
 
 -- ============================================================
--- 15. Anti-Stun
--- ============================================================
-task.spawn(function()
-    while ScreenGui and ScreenGui.Parent do
-        pcall(function()
-            if Config.AntiStun then
-                local char = LocalPlayer.Character
-                if char then
-                    local humanoid = char:FindFirstChild("Humanoid")
-                    if humanoid then
-                        humanoid.PlatformStand = false
-                        humanoid.Sit = false
-                    end
-                end
-            end
-        end)
-        task.wait(0.1)
-    end
-end)
-
--- ============================================================
--- 16. Noclip + ESP حلقة
+-- 13. Noclip + ESP حلقة
 -- ============================================================
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
@@ -728,45 +627,23 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 17. Auto Flash Step + Soru Mechanics
+-- 14. Auto Flash Step
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
-    if input.KeyCode == Enum.KeyCode.R then
-        if Config.AutoFlash or Config.SoruMechanics then
-            local closest = GetClosestEnemy()
-            if closest and closest.Character:FindFirstChild("HumanoidRootPart") then
-                local myChar = LocalPlayer.Character
-                if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                    myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, closest.Character.HumanoidRootPart.Position)
-                end
+    if input.KeyCode == Enum.KeyCode.R and Config.AutoFlash then
+        local closest = GetClosestEnemy()
+        if closest and closest.Character:FindFirstChild("HumanoidRootPart") then
+            local myChar = LocalPlayer.Character
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, closest.Character.HumanoidRootPart.Position)
             end
         end
     end
 end)
 
 -- ============================================================
--- 18. Jump Macro
--- ============================================================
-task.spawn(function()
-    while ScreenGui and ScreenGui.Parent do
-        pcall(function()
-            if Config.JumpMacro then
-                local char = LocalPlayer.Character
-                if char then
-                    local humanoid = char:FindFirstChild("Humanoid")
-                    if humanoid and humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
-                        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-                    end
-                end
-            end
-        end)
-        task.wait(0.5)
-    end
-end)
-
--- ============================================================
--- 19. Silent Aim + Aimlock + Mouse Lock
+-- 15. Silent Aim + Aimlock
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -783,10 +660,48 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 20. F4 (إخفاء) + F7 (إغلاق)
+-- 16. F4 (إخفاء) + F7 (إغلاق)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
     if input.KeyCode == Enum.KeyCode.F4 then
-       
+        MainFrame.Visible = not MainFrame.Visible
+        FloatingBtn.Visible = not FloatingBtn.Visible
+    end
+    
+    if input.KeyCode == Enum.KeyCode.F7 then
+        Config.SilentAim = false
+        Config.ESP = false
+        Config.ShowFOV = false
+        Config.Noclip = false
+        Config.AutoFlash = false
+        Config.Aimlock = false
+        Config.MouseLock = false
+        Config.Fly = false
+        
+        for player, data in pairs(espCache) do
+            RemoveESP(player)
+        end
+        
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+        
+        if ScreenGui then ScreenGui:Destroy() end
+        getgenv().RyzHubLoaded = false
+    end
+end)
+
+-- ============================================================
+-- 17. إشعار
+-- ============================================================
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "⚡ RyzHub v13.0",
+        Text = "Loaded successfully!",
+        Duration = 5
+    })
+end)
+
+print("[RyzHub] v13.0 Loaded successfully!")
