@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v4.0
+-- ⚡ RYZHUB | v4.1
 -- by mikey
 -- Silent Aim + ESP + Speed + Noclip + Aimbot + FOV + Discord
 -- ============================================================
@@ -39,7 +39,6 @@ ScreenGui.Name = "RyzHubUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- الإطار الرئيسي
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 400, 0, 550)
 MainFrame.Position = UDim2.new(0.5, -200, 0.5, -275)
@@ -62,7 +61,7 @@ stroke.Parent = MainFrame
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 35)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Text = "⚡ RYZHUB v4.0"
+Title.Text = "⚡ RYZHUB v4.1"
 Title.TextColor3 = Config.AccentColor
 Title.TextSize = 16
 Title.Font = Enum.Font.GothamBold
@@ -107,7 +106,7 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 3. نظام التمرير (Scrolling Frame)
+-- 3. ScrollFrame (يدوي)
 -- ============================================================
 local ScrollFrame = Instance.new("ScrollingFrame")
 ScrollFrame.Size = UDim2.new(1, -10, 1, -100)
@@ -116,20 +115,18 @@ ScrollFrame.BackgroundTransparency = 1
 ScrollFrame.BorderSizePixel = 0
 ScrollFrame.ScrollBarThickness = 4
 ScrollFrame.ScrollBarImageColor3 = Config.AccentColor
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 800)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 900)
 ScrollFrame.Parent = MainFrame
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Padding = UDim.new(0, 5)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Parent = ScrollFrame
+-- ============================================================
+-- 4. دوال مساعدة (بإحداثيات ثابتة)
+-- ============================================================
+local currentY = 5
 
--- ============================================================
--- 4. دوال Toggle
--- ============================================================
 local function CreateToggle(text, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -10, 0, 35)
+    frame.Position = UDim2.new(0, 0, 0, currentY)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     frame.BorderSizePixel = 0
     frame.Parent = ScrollFrame
@@ -184,14 +181,14 @@ local function CreateToggle(text, callback)
         end
         callback(state)
     end)
+    
+    currentY = currentY + 40
 end
 
--- ============================================================
--- 5. دوال Slider
--- ============================================================
 local function CreateSlider(text, minVal, maxVal, default, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, -10, 0, 50)
+    frame.Position = UDim2.new(0, 0, 0, currentY)
     frame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     frame.BorderSizePixel = 0
     frame.Parent = ScrollFrame
@@ -264,10 +261,12 @@ local function CreateSlider(text, minVal, maxVal, default, callback)
             callback(val)
         end
     end)
+    
+    currentY = currentY + 55
 end
 
 -- ============================================================
--- 6. العناصر
+-- 5. إضافة العناصر
 -- ============================================================
 CreateToggle("Silent Aim", function(v) Config.SilentAim = v end)
 CreateToggle("Aimbot", function(v) Config.Aimbot = v end)
@@ -286,10 +285,11 @@ CreateSlider("Walk Speed", 16, 200, 16, function(v)
 end)
 
 -- ============================================================
--- 7. زر Discord
+-- 6. زر Discord
 -- ============================================================
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Size = UDim2.new(1, -10, 0, 35)
+DiscordBtn.Position = UDim2.new(0, 0, 0, currentY)
 DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
 DiscordBtn.Text = "💬 Join Discord"
 DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -315,8 +315,13 @@ DiscordBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
+currentY = currentY + 45
+
+-- تحديث حجم Canvas
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, currentY + 10)
+
 -- ============================================================
--- 8. FOV Circle
+-- 7. FOV Circle
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Name = "FOVCircle"
@@ -337,14 +342,14 @@ fovStroke.Thickness = 1.5
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 9. ESP Folder
+-- 8. ESP Folder
 -- ============================================================
 local ESPFolder = Instance.new("Folder")
 ESPFolder.Name = "RyzHubESP"
 ESPFolder.Parent = ScreenGui
 
 -- ============================================================
--- 10. Silent Aim / Aimbot Engine
+-- 9. Silent Aim / Aimbot Engine
 -- ============================================================
 local function GetClosestEnemy()
     local char = LocalPlayer.Character
@@ -378,7 +383,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 11. ESP
+-- 10. ESP
 -- ============================================================
 local espCache = {}
 
@@ -421,10 +426,9 @@ local function CreateESP(player)
 end
 
 -- ============================================================
--- 12. الحلقة الرئيسية
+-- 11. الحلقة الرئيسية
 -- ============================================================
 RunService.RenderStepped:Connect(function()
-    -- Silent Aim
     if Config.SilentAim then
         local enemy = GetClosestEnemy()
         if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
@@ -435,7 +439,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Aimbot (نفس Silent Aim لكن مع إمكانية التوسيع)
     if Config.Aimbot then
         local enemy = GetClosestEnemy()
         if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
@@ -446,14 +449,12 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- FOV Circle
     if FOVFrame then
         FOVFrame.Visible = Config.ShowFOV
         FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
         FOVFrame.Position = UDim2.new(0.5, -Config.FOVRadius, 0.5, -Config.FOVRadius)
     end
 
-    -- Noclip
     if Config.Noclip then
         local char = LocalPlayer.Character
         if char then
@@ -465,7 +466,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP
     if Config.ESP then
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character then
@@ -494,14 +494,14 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 13. إشعار
+-- 12. إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v4.0",
+        Title = "⚡ RyzHub v4.1",
         Text = "Loaded! by mikey",
         Duration = 3
     })
 end)
 
-print("[RyzHub] v4.0 Loaded successfully! | by mikey")
+print("[RyzHub] v4.1 Loaded successfully! | by mikey")
