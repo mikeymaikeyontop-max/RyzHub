@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v15.0 (3D Flash Box + Credits)
+-- ⚡ RYZHUB | v16.0 (Soru AHK Edition)
 -- by mikey
 -- ============================================================
 
@@ -30,6 +30,10 @@ local Config = {
     AimRange = 300,
     Speed = 16,
     FlySpeed = 50,
+    -- Soru AHK
+    SoruAHK = false,
+    SoruKey = "Z",  -- Z أو X أو C
+    SoruTriggerKey = Enum.KeyCode.R, -- الزر الذي عند الضغط عليه يتم Flash Step
 }
 
 local Blacklist = {}
@@ -70,6 +74,7 @@ stroke.Color = Color3.fromRGB(80, 80, 90)
 stroke.Thickness = 1
 stroke.Parent = MainFrame
 
+-- شريط التبويبات
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, 0, 0, 30)
 TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -107,7 +112,8 @@ end
 CreateTabButton("Combat", 0)
 CreateTabButton("ESP", 90)
 CreateTabButton("Misc", 180)
-CreateTabButton("Blacklist", 270)
+CreateTabButton("AHK", 270)
+CreateTabButton("Blacklist", 360)
 
 -- حقوق mikey
 local Credits = Instance.new("TextLabel")
@@ -140,6 +146,7 @@ local CombatTab = CreateTabFrame("Combat")
 CombatTab.Visible = true
 local ESPTab = CreateTabFrame("ESP")
 local MiscTab = CreateTabFrame("Misc")
+local AHKTab = CreateTabFrame("AHK")
 local BlacklistTab = CreateTabFrame("Blacklist")
 
 -- ============================================================
@@ -280,6 +287,25 @@ local function CreateSlider(parent, text, minVal, maxVal, default, yPos, callbac
     end)
 end
 
+local function CreateButton(parent, text, yPos, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 28)
+    btn.Position = UDim2.new(0, 0, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(200, 200, 210)
+    btn.TextSize = 11
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.Parent = parent
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 4)
+    c.Parent = btn
+    
+    btn.MouseButton1Click:Connect(callback)
+end
+
 -- ============================================================
 -- 4. تبويب Combat
 -- ============================================================
@@ -316,7 +342,74 @@ CreateCheckbox(MiscCol1, "Fly", 90, function(v) Config.Fly = v end)
 CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 115, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
--- 7. تبويب Blacklist
+-- 7. تبويب AHK (Soru AHK)
+-- ============================================================
+local AHKCol = CreateSection(AHKTab, "Soru AHK Settings", 10, 5, 520)
+
+CreateCheckbox(AHKCol, "Enable Soru AHK", 30, function(v) 
+    Config.SoruAHK = v 
+    print("[RyzHub] Soru AHK: " .. tostring(v))
+end)
+
+-- اختيار الزر (Z, X, C)
+local keyLabel = Instance.new("TextLabel")
+keyLabel.Size = UDim2.new(1, 0, 0, 20)
+keyLabel.Position = UDim2.new(0, 0, 0, 60)
+keyLabel.BackgroundTransparency = 1
+keyLabel.Text = "Select Key to Press:"
+keyLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+keyLabel.TextSize = 11
+keyLabel.Font = Enum.Font.GothamBold
+keyLabel.TextXAlignment = Enum.TextXAlignment.Left
+keyLabel.Parent = AHKCol
+
+local keyButtons = {}
+local function CreateKeyButton(text, xPos, keyName)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 40, 0, 25)
+    btn.Position = UDim2.new(0, xPos, 0, 85)
+    btn.BackgroundColor3 = (Config.SoruKey == keyName) and Color3.fromRGB(100, 50, 180) or Color3.fromRGB(35, 35, 45)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(220, 220, 240)
+    btn.TextSize = 12
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.Parent = AHKCol
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 4)
+    c.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        Config.SoruKey = keyName
+        for _, b in pairs(keyButtons) do
+            b.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+        end
+        btn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
+        print("[RyzHub] Soru Key changed to: " .. keyName)
+    end)
+    
+    table.insert(keyButtons, btn)
+end
+
+CreateKeyButton("Z", 0, "Z")
+CreateKeyButton("X", 45, "X")
+CreateKeyButton("C", 90, "C")
+
+-- زر تغيير Trigger Key
+local triggerLabel = Instance.new("TextLabel")
+triggerLabel.Size = UDim2.new(1, 0, 0, 20)
+triggerLabel.Position = UDim2.new(0, 0, 0, 120)
+triggerLabel.BackgroundTransparency = 1
+triggerLabel.Text = "Trigger Key (Flash Step): R (Default)"
+triggerLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
+triggerLabel.TextSize = 11
+triggerLabel.Font = Enum.Font.Gotham
+triggerLabel.TextXAlignment = Enum.TextXAlignment.Left
+triggerLabel.Parent = AHKCol
+
+-- ============================================================
+-- 8. تبويب Blacklist
 -- ============================================================
 local BlacklistScroll = Instance.new("ScrollingFrame")
 BlacklistScroll.Size = UDim2.new(1, -20, 1, -40)
@@ -389,7 +482,7 @@ rbc.Parent = RefreshBtn
 RefreshBtn.MouseButton1Click:Connect(RefreshPlayerList)
 
 -- ============================================================
--- 8. Floating Button
+-- 9. Floating Button
 -- ============================================================
 local FloatingBtn = Instance.new("TextButton")
 FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -436,7 +529,7 @@ FloatingBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================================
--- 9. FOV Circle
+-- 10. FOV Circle
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
@@ -456,7 +549,7 @@ fovStroke.Thickness = 2
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 10. 3D Flash Box
+-- 11. 3D Flash Box
 -- ============================================================
 local FlashBoxPart = Instance.new("Part")
 FlashBoxPart.Name = "RyzFlashBox"
@@ -500,7 +593,7 @@ flashText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 flashText.Parent = flashBillboard
 
 -- ============================================================
--- 11. ESP
+-- 12. ESP
 -- ============================================================
 local espCache = {}
 
@@ -551,7 +644,7 @@ local function RemoveESP(player)
 end
 
 -- ============================================================
--- 12. GetClosestEnemy
+-- 13. GetClosestEnemy
 -- ============================================================
 local function GetClosestEnemy()
     local closest = nil
@@ -575,7 +668,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 13. Fly
+-- 14. Fly
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -618,7 +711,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 14. 3D Flash Box Update
+-- 15. 3D Flash Box Update
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -643,147 +736,14 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 15. R Key Detection (Flash Step)
+-- 16. Soru AHK Logic (عند الضغط على R)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
-    if input.KeyCode == Enum.KeyCode.R then
+    -- التحقق من زر Flash Step
+    if input.KeyCode == Config.SoruTriggerKey then
         local target = FlashBoxPart:GetAttribute("TargetPlayer")
         if target then
             local targetPlayer = Players:FindFirstChild(target)
-            if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                local myChar = LocalPlayer.Character
-                if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                    myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
-                    
-                    pcall(function()
-                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
-                        task.wait(0.05)
-                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
-                    end)
-                    
-                    print("[RyzHub] Flash Step → " .. targetPlayer.Name)
-                end
-            end
-        end
-    end
-end)
-
--- ============================================================
--- 16. FOV Circle Update
--- ============================================================
-RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if Config.ShowFOV and FOVFrame then
-            FOVFrame.Visible = true
-            local mouse = UserInputService:GetMouseLocation()
-            FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
-            FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
-        elseif FOVFrame then
-            FOVFrame.Visible = false
-        end
-    end)
-end)
-
--- ============================================================
--- 17. Noclip + ESP
--- ============================================================
-task.spawn(function()
-    while ScreenGui and ScreenGui.Parent do
-        pcall(function()
-            if Config.Noclip then
-                local char = LocalPlayer.Character
-                if char then
-                    for _, part in ipairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") and part.CanCollide then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-            end
-            
-            if Config.ESP then
-                for _, p in ipairs(Players:GetPlayers()) do
-                    if not IsBlacklisted(p) and p.Character then
-                        CreateESP(p)
-                    end
-                end
-                for player, data in pairs(espCache) do
-                    if IsBlacklisted(player) or not player.Character then
-                        RemoveESP(player)
-                    end
-                end
-            else
-                for player, data in pairs(espCache) do
-                    RemoveESP(player)
-                end
-            end
-        end)
-        task.wait(0.3)
-    end
-end)
-
--- ============================================================
--- 18. Silent Aim + Aimlock
--- ============================================================
-RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if Config.SilentAim or Config.Aimlock then
-            local closest = GetClosestEnemy()
-            if closest and closest.Character then
-                local targetPart = closest.Character:FindFirstChild("Head")
-                if targetPart then
-                    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
-                end
-            end
-        end
-    end)
-end)
-
--- ============================================================
--- 19. F4 (إخفاء) + F7 (إغلاق)
--- ============================================================
-UserInputService.InputBegan:Connect(function(input, processed)
-    if processed then return end
-    
-    if input.KeyCode == Enum.KeyCode.F4 then
-        MainFrame.Visible = not MainFrame.Visible
-        FloatingBtn.Visible = not FloatingBtn.Visible
-    end
-    
-    if input.KeyCode == Enum.KeyCode.F7 then
-        Config.SilentAim = false
-        Config.ESP = false
-        Config.ShowFOV = false
-        Config.Noclip = false
-        Config.AutoFlash = false
-        Config.Aimlock = false
-        Config.Fly = false
-        
-        for player, data in pairs(espCache) do
-            RemoveESP(player)
-        end
-        
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        end
-        
-        if FlashBoxPart then FlashBoxPart:Destroy() end
-        if ScreenGui then ScreenGui:Destroy() end
-        getgenv().RyzHubLoaded = false
-    end
-end)
-
--- ============================================================
--- 20. إشعار
--- ============================================================
-pcall(function()
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v15.0",
-        Text = "Loaded! by mikey",
-        Duration = 5
-    })
-end)
-
-print("[RyzHub] v15.0 Loaded successfully! | by mikey")
+            if targetPlayer and targetPlayer.Character and
