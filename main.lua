@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v20.0 (No Background - 100% Xeno)
+-- ⚡ RYZHUB | v21.0 (Organized Tabs)
 -- by mikey
 -- ============================================================
 
@@ -18,18 +18,24 @@ local Camera = workspace.CurrentCamera
 -- 1. الإعدادات
 -- ============================================================
 local Config = {
+    -- Combat
     SilentAim = false,
-    ESP = false,
-    ShowFOV = false,
-    Noclip = false,
-    AutoFlash = false,
     Aimlock = false,
-    Fly = false,
-    Hitbox = false,
+    MouseLock = false,
+    ShowFOV = false,
+    AutoSoru = false,
     FOVRadius = 150,
     AimRange = 300,
+    -- ESP
+    ESP = false,
+    ESPDistance = false,
+    ESPHealth = false,
+    -- Misc
+    SpeedHack = false,
+    Fly = false,
     Speed = 16,
     FlySpeed = 50,
+    -- AHK
     SoruAHK = false,
     SoruKey = "Z",
 }
@@ -44,7 +50,7 @@ local function IsBlacklisted(player)
 end
 
 -- ============================================================
--- 2. الواجهة (بدون أي خلفية)
+-- 2. الواجهة
 -- ============================================================
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -54,7 +60,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = PlayerGui
 
--- شريط التبويبات (بدون خلفية تحته)
+-- شريط التبويبات
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(0, 580, 0, 30)
 TabBar.Position = UDim2.new(0.5, -290, 0.5, -230)
@@ -144,7 +150,7 @@ Credits.Parent = ScreenGui
 Credits.ZIndex = 2
 
 -- ============================================================
--- 4. دوال مساعدة (العناصر مباشرة في ScreenGui)
+-- 4. دوال مساعدة
 -- ============================================================
 local function CreateCheckbox(tab, text, xPos, yPos, callback)
     local frame = Instance.new("Frame")
@@ -276,38 +282,32 @@ end
 -- ============================================================
 CreateCheckbox("Combat", "Silent Aim", 10, 45, function(v) Config.SilentAim = v end)
 CreateCheckbox("Combat", "Aimlock", 10, 72, function(v) Config.Aimlock = v end)
-CreateCheckbox("Combat", "Auto Flash (3D Box + R)", 10, 99, function(v) Config.AutoFlash = v end)
-CreateCheckbox("Combat", "Hitbox System", 10, 126, function(v) Config.Hitbox = v end)
+CreateCheckbox("Combat", "Mouse Lock", 10, 99, function(v) Config.MouseLock = v end)
+CreateCheckbox("Combat", "Show FOV", 10, 126, function(v) Config.ShowFOV = v end)
+CreateCheckbox("Combat", "Auto Soru", 10, 153, function(v) Config.AutoSoru = v end)
 
 CreateSlider("Combat", "FOV Radius", 50, 500, 150, 280, 45, function(v) Config.FOVRadius = v end)
 CreateSlider("Combat", "Aim Range", 50, 500, 300, 280, 80, function(v) Config.AimRange = v end)
-CreateCheckbox("Combat", "Show FOV", 280, 115, function(v) Config.ShowFOV = v end)
 
 -- ============================================================
 -- 6. تبويب ESP
 -- ============================================================
 CreateCheckbox("ESP", "Enable ESP", 10, 45, function(v) Config.ESP = v end)
-CreateCheckbox("ESP", "Reduced Detail", 10, 72, function(v) Config.ReducedESP = v end)
+CreateCheckbox("ESP", "ESP Distance", 10, 72, function(v) Config.ESPDistance = v end)
+CreateCheckbox("ESP", "ESP Health", 10, 99, function(v) Config.ESPHealth = v end)
 
 -- ============================================================
 -- 7. تبويب Misc
 -- ============================================================
-CreateSlider("Misc", "Walk Speed", 16, 200, 16, 10, 45, function(v)
-    Config.Speed = v
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = v
-    end
-end)
-CreateCheckbox("Misc", "Noclip", 10, 80, function(v) Config.Noclip = v end)
-CreateCheckbox("Misc", "Fly", 10, 107, function(v) Config.Fly = v end)
+CreateCheckbox("Misc", "Speed Hack", 10, 45, function(v) Config.SpeedHack = v end)
+CreateCheckbox("Misc", "Fly", 10, 72, function(v) Config.Fly = v end)
+CreateSlider("Misc", "Speed", 16, 200, 16, 10, 100, function(v) Config.Speed = v end)
 CreateSlider("Misc", "Fly Speed", 10, 200, 50, 10, 135, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
 -- 8. تبويب AHK
 -- ============================================================
-CreateCheckbox("AHK", "Enable Soru AHK (Press R)", 10, 45, function(v) 
-    Config.SoruAHK = v 
-end)
+CreateCheckbox("AHK", "Auto Soru AHK", 10, 45, function(v) Config.SoruAHK = v end)
 
 local keyLabel = Instance.new("TextLabel")
 keyLabel.Size = UDim2.new(0, 250, 0, 20)
@@ -546,14 +546,14 @@ local function CreateESP(player)
     
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "RyzName_" .. player.Name
-    billboard.Size = UDim2.new(0, 150, 0, 25)
+    billboard.Size = UDim2.new(0, 150, 0, 50)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
     billboard.Adornee = head
     billboard.Parent = PlayerGui
     
     local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.Size = UDim2.new(1, 0, 0, 25)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = player.Name
     nameLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
@@ -563,7 +563,31 @@ local function CreateESP(player)
     nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     nameLabel.Parent = billboard
     
-    espCache[player] = {highlight = highlight, billboard = billboard}
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Size = UDim2.new(1, 0, 0, 20)
+    distLabel.Position = UDim2.new(0, 0, 0, 25)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Text = "0m"
+    distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    distLabel.TextSize = 10
+    distLabel.Font = Enum.Font.GothamBold
+    distLabel.TextStrokeTransparency = 0
+    distLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    distLabel.Parent = billboard
+    
+    local healthLabel = Instance.new("TextLabel")
+    healthLabel.Size = UDim2.new(1, 0, 0, 20)
+    healthLabel.Position = UDim2.new(0, 0, 0, 45)
+    healthLabel.BackgroundTransparency = 1
+    healthLabel.Text = "100HP"
+    healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    healthLabel.TextSize = 10
+    healthLabel.Font = Enum.Font.GothamBold
+    healthLabel.TextStrokeTransparency = 0
+    healthLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    healthLabel.Parent = billboard
+    
+    espCache[player] = {highlight = highlight, billboard = billboard, distLabel = distLabel, healthLabel = healthLabel}
 end
 
 local function RemoveESP(player)
@@ -599,14 +623,25 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 15. Fly
+-- 15. Fly + Speed Hack + Auto Soru
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        
+        -- Speed Hack
+        if Config.SpeedHack then
+            local humanoid = char:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = Config.Speed
+            end
+        end
+        
+        -- Fly
         if Config.Fly then
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local hrp = char.HumanoidRootPart
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
                 if not hrp:FindFirstChild("RyzFly") then
                     local bv = Instance.new("BodyVelocity")
                     bv.Name = "RyzFly"
@@ -632,39 +667,28 @@ RunService.RenderStepped:Connect(function()
                 end
             end
         else
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local bv = char.HumanoidRootPart:FindFirstChild("RyzFly")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local bv = hrp:FindFirstChild("RyzFly")
                 if bv then bv:Destroy() end
             end
         end
-    end)
-end)
-
--- ============================================================
--- 16. 3D Flash Box Update
--- ============================================================
-RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if Config.AutoFlash then
+        
+        -- Auto Soru
+        if Config.AutoSoru then
             local enemy = GetClosestEnemy()
             if enemy and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = enemy.Character.HumanoidRootPart
-                FlashBoxPart.CFrame = hrp.CFrame
-                FlashBoxPart.Transparency = 0.6
-                flashHighlight.Adornee = FlashBoxPart
-                FlashBoxPart:SetAttribute("TargetPlayer", enemy.Name)
-            else
-                FlashBoxPart.Transparency = 1
+                local myHrp = char:FindFirstChild("HumanoidRootPart")
+                if myHrp then
+                    myHrp.CFrame = CFrame.new(myHrp.Position, enemy.Character.HumanoidRootPart.Position)
+                end
             end
-        else
-            FlashBoxPart.Transparency = 1
         end
     end)
 end)
 
 -- ============================================================
--- 17. Soru AHK Logic
+-- 16. Soru AHK Logic
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
@@ -707,7 +731,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 -- ============================================================
--- 18. FOV Circle Update
+-- 17. FOV Circle Update
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -723,22 +747,11 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 19. Noclip + ESP
+-- 18. Noclip + ESP
 -- ============================================================
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
         pcall(function()
-            if Config.Noclip then
-                local char = LocalPlayer.Character
-                if char then
-                    for _, part in ipairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") and part.CanCollide then
-                            part.CanCollide = false
-                        end
-                    end
-                end
-            end
-            
             if Config.ESP then
                 for _, p in ipairs(Players:GetPlayers()) do
                     if not IsBlacklisted(p) and p.Character then
@@ -761,11 +774,11 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 20. Silent Aim + Aimlock
+-- 19. Silent Aim + Aimlock + MouseLock
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
-        if Config.SilentAim or Config.Aimlock then
+        if Config.SilentAim or Config.Aimlock or Config.MouseLock then
             local closest = GetClosestEnemy()
             if closest and closest.Character then
                 local targetPart = closest.Character:FindFirstChild("Head")
@@ -778,7 +791,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 21. F4 (إخفاء) + F7 (إغلاق)
+-- 20. F4 (إخفاء) + F7 (إغلاق)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
@@ -803,6 +816,9 @@ UserInputService.InputBegan:Connect(function(input, processed)
         Config.Aimlock = false
         Config.Fly = false
         Config.SoruAHK = false
+        Config.SpeedHack = false
+        Config.AutoSoru = false
+        Config.MouseLock = false
         
         for player, data in pairs(espCache) do
             RemoveESP(player)
@@ -819,14 +835,14 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 -- ============================================================
--- 22. إشعار
+-- 21. إشعار
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v20.0",
-        Text = "Loaded! No Background - Xeno 100%",
+        Title = "⚡ RyzHub v21.0",
+        Text = "Organized Tabs Loaded! by mikey",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v20.0 Loaded successfully! No Background.")
+print("[RyzHub] v21.0 Loaded successfully! Organized Tabs.")
