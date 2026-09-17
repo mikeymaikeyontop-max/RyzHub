@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v14.1 (Auto Flash Step System) + AHK
+-- ⚡ RYZHUB | v14.1 (Big Red Flash Target Box) + AHK
 -- by mikey
 -- ============================================================
 
@@ -26,11 +26,13 @@ local Config = {
     Aimlock = false,
     Fly = false,
     Hitbox = false,
+    SmartAutoV3 = false,
+    JumpMacro = false,
     FOVRadius = 150,
     AimRange = 300,
     Speed = 16,
     FlySpeed = 50,
-    -- Soru AHK
+    -- Soru AHK (إضافة جديدة)
     SoruAHK = false,
     SoruKey = "Z",
 }
@@ -73,7 +75,6 @@ stroke.Color = Color3.fromRGB(80, 80, 90)
 stroke.Thickness = 1
 stroke.Parent = MainFrame
 
--- شريط التبويبات
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, 0, 0, 30)
 TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -114,19 +115,8 @@ CreateTabButton("Misc", 180)
 CreateTabButton("AHK", 270)
 CreateTabButton("Blacklist", 360)
 
--- حقوق mikey
-local Credits = Instance.new("TextLabel")
-Credits.Size = UDim2.new(1, 0, 0, 20)
-Credits.Position = UDim2.new(0, 0, 1, -22)
-Credits.BackgroundTransparency = 1
-Credits.Text = "⚡ RyzHub | Made by mikey ⚡"
-Credits.TextColor3 = Color3.fromRGB(150, 150, 150)
-Credits.TextSize = 10
-Credits.Font = Enum.Font.GothamItalic
-Credits.Parent = MainFrame
-
 local ContentFrame = Instance.new("Frame")
-ContentFrame.Size = UDim2.new(1, 0, 1, -60)
+ContentFrame.Size = UDim2.new(1, 0, 1, -30)
 ContentFrame.Position = UDim2.new(0, 0, 0, 30)
 ContentFrame.BackgroundTransparency = 1
 ContentFrame.Parent = MainFrame
@@ -294,6 +284,7 @@ CreateCheckbox(CombatCol1, "Silent Aim", 30, function(v) Config.SilentAim = v en
 CreateCheckbox(CombatCol1, "Aimlock", 55, function(v) Config.Aimlock = v end)
 CreateCheckbox(CombatCol1, "Auto Flash (Click Target)", 80, function(v) Config.AutoFlash = v end)
 CreateCheckbox(CombatCol1, "Hitbox System", 105, function(v) Config.Hitbox = v end)
+CreateCheckbox(CombatCol1, "Smart Auto V3", 130, function(v) Config.SmartAutoV3 = v end)
 
 local CombatCol2 = CreateSection(CombatTab, "Targeting", 280, 5, 250)
 CreateSlider(CombatCol2, "FOV Radius", 50, 500, 150, 30, function(v) Config.FOVRadius = v end)
@@ -516,28 +507,59 @@ fovStroke.Thickness = 2
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 11. 3D Flash Box
+-- 11. Flash Target Box (كبير - 200x200)
 -- ============================================================
-local FlashBoxPart = Instance.new("Part")
-FlashBoxPart.Name = "RyzFlashBox"
-FlashBoxPart.Size = Vector3.new(6, 6, 6)
-FlashBoxPart.Transparency = 1
-FlashBoxPart.Color = Color3.fromRGB(255, 0, 0)
-FlashBoxPart.Material = Enum.Material.Neon
-FlashBoxPart.CanCollide = false
-FlashBoxPart.Anchored = true
-FlashBoxPart.CastShadow = false
-FlashBoxPart.Parent = workspace
+local flashBox = Instance.new("TextButton")
+flashBox.Name = "FlashTargetBox"
+flashBox.Size = UDim2.new(0, 200, 0, 200)
+flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+flashBox.BackgroundTransparency = 0.6
+flashBox.Text = ""
+flashBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+flashBox.TextSize = 14
+flashBox.Font = Enum.Font.GothamBold
+flashBox.BorderSizePixel = 4
+flashBox.BorderColor3 = Color3.fromRGB(255, 0, 0)
+flashBox.Visible = false
+flashBox.ZIndex = 999
+flashBox.Parent = ScreenGui
 
-local flashHighlight = Instance.new("Highlight")
-flashHighlight.Name = "RyzFlashHighlight"
-flashHighlight.FillColor = Color3.fromRGB(255, 0, 0)
-flashHighlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-flashHighlight.FillTransparency = 0.7
-flashHighlight.OutlineTransparency = 0
-flashHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-flashHighlight.Adornee = FlashBoxPart
-flashHighlight.Parent = FlashBoxPart
+local flashCorner = Instance.new("UICorner")
+flashCorner.CornerRadius = UDim.new(0, 15)
+flashCorner.Parent = flashBox
+
+flashBox.MouseEnter:Connect(function()
+    flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    flashBox.BackgroundTransparency = 0.3
+    flashBox.BorderColor3 = Color3.fromRGB(255, 255, 255)
+    flashBox.BorderSizePixel = 6
+end)
+
+flashBox.MouseLeave:Connect(function()
+    flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    flashBox.BackgroundTransparency = 0.6
+    flashBox.BorderColor3 = Color3.fromRGB(255, 0, 0)
+    flashBox.BorderSizePixel = 4
+end)
+
+flashBox.MouseButton1Click:Connect(function()
+    local target = flashBox:GetAttribute("TargetPlayer")
+    if target then
+        local targetPlayer = Players:FindFirstChild(target)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local myChar = LocalPlayer.Character
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                pcall(function()
+                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
+                    task.wait(0.05)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
+                end)
+                print("[RyzHub] Flash Step → " .. targetPlayer.Name)
+            end
+        end
+    end
+end)
 
 -- ============================================================
 -- 12. ESP
@@ -658,23 +680,28 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 15. 3D Flash Box Update
+-- 15. Auto Flash Step Box Update
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
         if Config.AutoFlash then
             local enemy = GetClosestEnemy()
-            if enemy and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = enemy.Character.HumanoidRootPart
-                FlashBoxPart.CFrame = hrp.CFrame
-                FlashBoxPart.Transparency = 0.6
-                flashHighlight.Adornee = FlashBoxPart
-                FlashBoxPart:SetAttribute("TargetPlayer", enemy.Name)
+            if enemy and enemy.Character and enemy.Character:FindFirstChild("Head") then
+                local head = enemy.Character.Head
+                local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                
+                if onScreen then
+                    flashBox.Visible = true
+                    flashBox.Position = UDim2.new(0, screenPos.X - 100, 0, screenPos.Y - 100)
+                    flashBox:SetAttribute("TargetPlayer", enemy.Name)
+                else
+                    flashBox.Visible = false
+                end
             else
-                FlashBoxPart.Transparency = 1
+                flashBox.Visible = false
             end
         else
-            FlashBoxPart.Transparency = 1
+            flashBox.Visible = false
         end
     end)
 end)
@@ -685,7 +712,7 @@ end)
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.R and Config.SoruAHK then
-        local target = FlashBoxPart:GetAttribute("TargetPlayer")
+        local target = flashBox:GetAttribute("TargetPlayer")
         if target then
             local targetPlayer = Players:FindFirstChild(target)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -823,7 +850,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
             LocalPlayer.Character.Humanoid.WalkSpeed = 16
         end
         
-        if FlashBoxPart then FlashBoxPart:Destroy() end
         if ScreenGui then ScreenGui:Destroy() end
         getgenv().RyzHubLoaded = false
     end
@@ -835,9 +861,9 @@ end)
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "⚡ RyzHub v14.1 + AHK",
-        Text = "Loaded! by mikey",
+        Text = "Big Red Flash Target + Soru AHK Loaded!",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v14.1 + AHK Loaded successfully! by mikey")
+print("[RyzHub] v14.1 + AHK Loaded successfully!")
