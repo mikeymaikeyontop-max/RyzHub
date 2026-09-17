@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v21.0 (Organized Tabs)
+-- ⚡ RYZHUB | v22.0 (No Containers - Xeno Final)
 -- by mikey
 -- ============================================================
 
@@ -18,24 +18,20 @@ local Camera = workspace.CurrentCamera
 -- 1. الإعدادات
 -- ============================================================
 local Config = {
-    -- Combat
     SilentAim = false,
     Aimlock = false,
     MouseLock = false,
     ShowFOV = false,
     AutoSoru = false,
-    FOVRadius = 150,
-    AimRange = 300,
-    -- ESP
     ESP = false,
     ESPDistance = false,
     ESPHealth = false,
-    -- Misc
     SpeedHack = false,
     Fly = false,
+    FOVRadius = 150,
+    AimRange = 300,
     Speed = 16,
     FlySpeed = 50,
-    -- AHK
     SoruAHK = false,
     SoruKey = "Z",
 }
@@ -50,7 +46,7 @@ local function IsBlacklisted(player)
 end
 
 -- ============================================================
--- 2. الواجهة
+-- 2. الواجهة (كل شيء في ScreenGui)
 -- ============================================================
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -59,19 +55,6 @@ ScreenGui.Name = "RyzHubUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = PlayerGui
-
--- شريط التبويبات
-local TabBar = Instance.new("Frame")
-TabBar.Size = UDim2.new(0, 580, 0, 30)
-TabBar.Position = UDim2.new(0.5, -290, 0.5, -230)
-TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-TabBar.BorderSizePixel = 0
-TabBar.Parent = ScreenGui
-TabBar.ZIndex = 2
-
-local tbc = Instance.new("UICorner")
-tbc.CornerRadius = UDim.new(0, 6)
-tbc.Parent = TabBar
 
 -- ============================================================
 -- 3. نظام التبويبات
@@ -113,16 +96,16 @@ end
 
 local function CreateTabButton(name, xPos)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 90, 1, 0)
-    btn.Position = UDim2.new(0, xPos, 0, 0)
+    btn.Size = UDim2.new(0, 90, 0, 30)
+    btn.Position = UDim2.new(0.5, -290 + xPos, 0.5, -230)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(180, 180, 190)
     btn.TextSize = 12
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
-    btn.Parent = TabBar
-    btn.ZIndex = 3
+    btn.Parent = ScreenGui
+    btn.ZIndex = 2
     
     btn.MouseButton1Click:Connect(function()
         SwitchTab(name)
@@ -470,11 +453,13 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 FloatingBtn.MouseButton1Click:Connect(function()
-    TabBar.Visible = not TabBar.Visible
     for _, elements in pairs(tabElements) do
         for _, el in ipairs(elements) do
             el.Visible = not el.Visible
         end
+    end
+    for _, btn in pairs(tabButtons) do
+        btn.Visible = not btn.Visible
     end
     Credits.Visible = not Credits.Visible
 end)
@@ -546,14 +531,14 @@ local function CreateESP(player)
     
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "RyzName_" .. player.Name
-    billboard.Size = UDim2.new(0, 150, 0, 50)
+    billboard.Size = UDim2.new(0, 150, 0, 60)
     billboard.StudsOffset = Vector3.new(0, 3, 0)
     billboard.AlwaysOnTop = true
     billboard.Adornee = head
     billboard.Parent = PlayerGui
     
     local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, 0, 0, 25)
+    nameLabel.Size = UDim2.new(1, 0, 0, 20)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = player.Name
     nameLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
@@ -565,7 +550,7 @@ local function CreateESP(player)
     
     local distLabel = Instance.new("TextLabel")
     distLabel.Size = UDim2.new(1, 0, 0, 20)
-    distLabel.Position = UDim2.new(0, 0, 0, 25)
+    distLabel.Position = UDim2.new(0, 0, 0, 20)
     distLabel.BackgroundTransparency = 1
     distLabel.Text = "0m"
     distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -577,7 +562,7 @@ local function CreateESP(player)
     
     local healthLabel = Instance.new("TextLabel")
     healthLabel.Size = UDim2.new(1, 0, 0, 20)
-    healthLabel.Position = UDim2.new(0, 0, 0, 45)
+    healthLabel.Position = UDim2.new(0, 0, 0, 40)
     healthLabel.BackgroundTransparency = 1
     healthLabel.Text = "100HP"
     healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
@@ -630,7 +615,6 @@ RunService.RenderStepped:Connect(function()
         local char = LocalPlayer.Character
         if not char then return end
         
-        -- Speed Hack
         if Config.SpeedHack then
             local humanoid = char:FindFirstChild("Humanoid")
             if humanoid then
@@ -638,7 +622,6 @@ RunService.RenderStepped:Connect(function()
             end
         end
         
-        -- Fly
         if Config.Fly then
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
@@ -674,7 +657,6 @@ RunService.RenderStepped:Connect(function()
             end
         end
         
-        -- Auto Soru
         if Config.AutoSoru then
             local enemy = GetClosestEnemy()
             if enemy and enemy.Character and enemy.Character:FindFirstChild("HumanoidRootPart") then
@@ -747,7 +729,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 18. Noclip + ESP
+-- 18. ESP Loop
 -- ============================================================
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
@@ -761,6 +743,23 @@ task.spawn(function()
                 for player, data in pairs(espCache) do
                     if IsBlacklisted(player) or not player.Character then
                         RemoveESP(player)
+                    else
+                        local myChar = LocalPlayer.Character
+                        if myChar and myChar:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("HumanoidRootPart") then
+                            local dist = (myChar.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+                            data.distLabel.Text = math.floor(dist) .. "m"
+                            local humanoid = player.Character:FindFirstChild("Humanoid")
+                            if humanoid then
+                                data.healthLabel.Text = math.floor(humanoid.Health) .. "HP"
+                                if humanoid.Health > 50 then
+                                    data.healthLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+                                elseif humanoid.Health > 25 then
+                                    data.healthLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+                                else
+                                    data.healthLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+                                end
+                            end
+                        end
                     end
                 end
             else
@@ -797,11 +796,13 @@ UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
     if input.KeyCode == Enum.KeyCode.F4 then
-        TabBar.Visible = not TabBar.Visible
         for _, elements in pairs(tabElements) do
             for _, el in ipairs(elements) do
                 el.Visible = not el.Visible
             end
+        end
+        for _, btn in pairs(tabButtons) do
+            btn.Visible = not btn.Visible
         end
         Credits.Visible = not Credits.Visible
         FloatingBtn.Visible = not FloatingBtn.Visible
@@ -839,10 +840,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v21.0",
-        Text = "Organized Tabs Loaded! by mikey",
+        Title = "⚡ RyzHub v22.0",
+        Text = "Loaded! by mikey",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v21.0 Loaded successfully! Organized Tabs.")
+print("[RyzHub] v22.0 Loaded successfully!")
