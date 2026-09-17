@@ -30,7 +30,7 @@ local Config = {
     AimRange = 300,
     Speed = 16,
     FlySpeed = 50,
-    -- Soru AHK (إضافة جديدة)
+    -- Soru AHK
     SoruAHK = false,
     SoruKey = "Z",
 }
@@ -73,6 +73,7 @@ stroke.Color = Color3.fromRGB(80, 80, 90)
 stroke.Thickness = 1
 stroke.Parent = MainFrame
 
+-- شريط التبويبات
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(1, 0, 0, 30)
 TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -321,7 +322,7 @@ CreateCheckbox(MiscCol1, "Fly", 90, function(v) Config.Fly = v end)
 CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 115, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
--- 7. تبويب AHK (إضافة Soru AHK)
+-- 7. تبويب AHK (Soru AHK) - الإضافة الجديدة
 -- ============================================================
 local AHKCol = CreateSection(AHKTab, "Soru AHK Settings", 10, 5, 520)
 
@@ -767,7 +768,8 @@ task.spawn(function()
                     end
                 end
             else
-                for player, data in pairs(espCache) do                    RemoveESP(player)
+                for player, data in pairs(espCache) do
+                    RemoveESP(player)
                 end
             end
         end)
