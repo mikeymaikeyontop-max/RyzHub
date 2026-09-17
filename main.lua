@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v16.1 (Xeno Compatible)
+-- ⚡ RYZHUB | v17.0 (Xeno Fixed)
 -- by mikey
 -- ============================================================
 
@@ -148,32 +148,12 @@ local AHKTab = CreateTabFrame("AHK")
 local BlacklistTab = CreateTabFrame("Blacklist")
 
 -- ============================================================
--- 3. دوال مساعدة (إحداثيات ثابتة)
+-- 3. دوال مساعدة (بدون CreateSection)
 -- ============================================================
-local function CreateSection(parent, title, xPos, yPos, width)
-    local section = Instance.new("Frame")
-    section.Size = UDim2.new(0, width, 1, -10)
-    section.Position = UDim2.new(0, xPos, 0, yPos)
-    section.BackgroundTransparency = 1
-    section.Parent = parent
-    
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 20)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(100, 180, 255)
-    titleLabel.TextSize = 11
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Parent = section
-    
-    return section
-end
-
-local function CreateCheckbox(parent, text, yPos, callback)
+local function CreateCheckbox(parent, text, xPos, yPos, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 0, 22)
-    frame.Position = UDim2.new(0, 0, 0, yPos)
+    frame.Size = UDim2.new(0, 250, 0, 22)
+    frame.Position = UDim2.new(0, xPos, 0, yPos)
     frame.BackgroundTransparency = 1
     frame.Parent = parent
     
@@ -213,10 +193,10 @@ local function CreateCheckbox(parent, text, yPos, callback)
     end)
 end
 
-local function CreateSlider(parent, text, minVal, maxVal, default, yPos, callback)
+local function CreateSlider(parent, text, minVal, maxVal, default, xPos, yPos, callback)
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 0, 30)
-    frame.Position = UDim2.new(0, 0, 0, yPos)
+    frame.Size = UDim2.new(0, 250, 0, 30)
+    frame.Position = UDim2.new(0, xPos, 0, yPos)
     frame.BackgroundTransparency = 1
     frame.Parent = parent
     
@@ -285,93 +265,68 @@ local function CreateSlider(parent, text, minVal, maxVal, default, yPos, callbac
     end)
 end
 
-local function CreateButton(parent, text, yPos, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 28)
-    btn.Position = UDim2.new(0, 0, 0, yPos)
-    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(200, 200, 210)
-    btn.TextSize = 12
-    btn.Font = Enum.Font.GothamBold
-    btn.BorderSizePixel = 0
-    btn.Parent = parent
-    
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 4)
-    c.Parent = btn
-    
-    btn.MouseButton1Click:Connect(callback)
-end
-
 -- ============================================================
 -- 4. تبويب Combat
 -- ============================================================
-local CombatCol1 = CreateSection(CombatTab, "Combat Skills", 10, 5, 260)
-CreateCheckbox(CombatCol1, "Silent Aim", 30, function(v) Config.SilentAim = v end)
-CreateCheckbox(CombatCol1, "Aimlock", 57, function(v) Config.Aimlock = v end)
-CreateCheckbox(CombatCol1, "Auto Flash (3D Box + R)", 84, function(v) Config.AutoFlash = v end)
-CreateCheckbox(CombatCol1, "Hitbox System", 111, function(v) Config.Hitbox = v end)
+CreateCheckbox(CombatTab, "Silent Aim", 10, 10, function(v) Config.SilentAim = v end)
+CreateCheckbox(CombatTab, "Aimlock", 10, 37, function(v) Config.Aimlock = v end)
+CreateCheckbox(CombatTab, "Auto Flash (3D Box + R)", 10, 64, function(v) Config.AutoFlash = v end)
+CreateCheckbox(CombatTab, "Hitbox System", 10, 91, function(v) Config.Hitbox = v end)
 
-local CombatCol2 = CreateSection(CombatTab, "Targeting", 290, 5, 270)
-CreateSlider(CombatCol2, "FOV Radius", 50, 500, 150, 30, function(v) Config.FOVRadius = v end)
-CreateSlider(CombatCol2, "Aim Range", 50, 500, 300, 65, function(v) Config.AimRange = v end)
-CreateCheckbox(CombatCol2, "Show FOV", 100, function(v) Config.ShowFOV = v end)
+CreateSlider(CombatTab, "FOV Radius", 50, 500, 150, 280, 10, function(v) Config.FOVRadius = v end)
+CreateSlider(CombatTab, "Aim Range", 50, 500, 300, 280, 45, function(v) Config.AimRange = v end)
+CreateCheckbox(CombatTab, "Show FOV", 280, 80, function(v) Config.ShowFOV = v end)
 
 -- ============================================================
 -- 5. تبويب ESP
 -- ============================================================
-local ESPCol = CreateSection(ESPTab, "ESP Settings", 10, 5, 550)
-CreateCheckbox(ESPCol, "Enable ESP", 30, function(v) Config.ESP = v end)
-CreateCheckbox(ESPCol, "Reduced Detail", 57, function(v) Config.ReducedESP = v end)
+CreateCheckbox(ESPTab, "Enable ESP", 10, 10, function(v) Config.ESP = v end)
+CreateCheckbox(ESPTab, "Reduced Detail", 10, 37, function(v) Config.ReducedESP = v end)
 
 -- ============================================================
 -- 6. تبويب Misc
 -- ============================================================
-local MiscCol1 = CreateSection(MiscTab, "Movement", 10, 5, 260)
-CreateSlider(MiscCol1, "Walk Speed", 16, 200, 16, 30, function(v)
+CreateSlider(MiscTab, "Walk Speed", 16, 200, 16, 10, 10, function(v)
     Config.Speed = v
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = v
     end
 end)
-CreateCheckbox(MiscCol1, "Noclip", 65, function(v) Config.Noclip = v end)
-CreateCheckbox(MiscCol1, "Fly", 92, function(v) Config.Fly = v end)
-CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 120, function(v) Config.FlySpeed = v end)
+CreateCheckbox(MiscTab, "Noclip", 10, 45, function(v) Config.Noclip = v end)
+CreateCheckbox(MiscTab, "Fly", 10, 72, function(v) Config.Fly = v end)
+CreateSlider(MiscTab, "Fly Speed", 10, 200, 50, 10, 100, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
--- 7. تبويب AHK (Soru AHK)
+-- 7. تبويب AHK
 -- ============================================================
-local AHKCol = CreateSection(AHKTab, "Soru AHK Settings", 10, 5, 550)
-
-CreateCheckbox(AHKCol, "Enable Soru AHK (Press R)", 30, function(v) 
+CreateCheckbox(AHKTab, "Enable Soru AHK (Press R)", 10, 10, function(v) 
     Config.SoruAHK = v 
     print("[RyzHub] Soru AHK: " .. tostring(v))
 end)
 
 local keyLabel = Instance.new("TextLabel")
-keyLabel.Size = UDim2.new(1, 0, 0, 20)
-keyLabel.Position = UDim2.new(0, 0, 0, 60)
+keyLabel.Size = UDim2.new(0, 250, 0, 20)
+keyLabel.Position = UDim2.new(0, 10, 0, 40)
 keyLabel.BackgroundTransparency = 1
 keyLabel.Text = "Select Key to Press:"
 keyLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
 keyLabel.TextSize = 12
 keyLabel.Font = Enum.Font.GothamBold
 keyLabel.TextXAlignment = Enum.TextXAlignment.Left
-keyLabel.Parent = AHKCol
+keyLabel.Parent = AHKTab
 
 local keyButtons = {}
-local function CreateKeyButton(text, xPos, keyName)
+local function CreateKeyButton(text, xPos, yPos, keyName)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 45, 0, 28)
-    btn.Position = UDim2.new(0, xPos, 0, 85)
+    btn.Position = UDim2.new(0, xPos, 0, yPos)
     btn.BackgroundColor3 = (Config.SoruKey == keyName) and Color3.fromRGB(100, 50, 180) or Color3.fromRGB(35, 35, 45)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(220, 220, 240)
     btn.TextSize = 13
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
-    btn.Parent = AHKCol
+    btn.Parent = AHKTab
     
     local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 4)
@@ -389,46 +344,44 @@ local function CreateKeyButton(text, xPos, keyName)
     table.insert(keyButtons, btn)
 end
 
-CreateKeyButton("Z", 0, "Z")
-CreateKeyButton("X", 50, "X")
-CreateKeyButton("C", 100, "C")
+CreateKeyButton("Z", 10, 70, "Z")
+CreateKeyButton("X", 60, 70, "X")
+CreateKeyButton("C", 110, 70, "C")
 
 local triggerLabel = Instance.new("TextLabel")
-triggerLabel.Size = UDim2.new(1, 0, 0, 20)
-triggerLabel.Position = UDim2.new(0, 0, 0, 120)
+triggerLabel.Size = UDim2.new(0, 250, 0, 20)
+triggerLabel.Position = UDim2.new(0, 10, 0, 105)
 triggerLabel.BackgroundTransparency = 1
-triggerLabel.Text = "Trigger Key (Flash Step): R (Default)"
+triggerLabel.Text = "Trigger Key: R (Default)"
 triggerLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
 triggerLabel.TextSize = 12
 triggerLabel.Font = Enum.Font.Gotham
 triggerLabel.TextXAlignment = Enum.TextXAlignment.Left
-triggerLabel.Parent = AHKCol
+triggerLabel.Parent = AHKTab
 
 -- ============================================================
 -- 8. تبويب Blacklist
 -- ============================================================
-local BlacklistCol = CreateSection(BlacklistTab, "Player List", 10, 5, 550)
-
 local function RefreshPlayerList()
-    for _, child in ipairs(BlacklistCol:GetChildren()) do
+    for _, child in ipairs(BlacklistTab:GetChildren()) do
         if child:IsA("TextButton") and child.Name ~= "RefreshBtn" then
             child:Destroy()
         end
     end
     
-    local y = 30
+    local y = 10
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
             local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, 0, 0, 26)
-            btn.Position = UDim2.new(0, 0, 0, y)
+            btn.Size = UDim2.new(0, 540, 0, 26)
+            btn.Position = UDim2.new(0, 10, 0, y)
             btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
             btn.Text = (Blacklist[p.Name] and "🚫 " or "✅ ") .. p.Name
             btn.TextColor3 = Blacklist[p.Name] and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(100, 255, 100)
             btn.TextSize = 12
             btn.Font = Enum.Font.Gotham
             btn.BorderSizePixel = 0
-            btn.Parent = BlacklistCol
+            btn.Parent = BlacklistTab
             
             local c = Instance.new("UICorner")
             c.CornerRadius = UDim.new(0, 4)
@@ -455,15 +408,15 @@ RefreshPlayerList()
 
 local RefreshBtn = Instance.new("TextButton")
 RefreshBtn.Name = "RefreshBtn"
-RefreshBtn.Size = UDim2.new(1, 0, 0, 28)
-RefreshBtn.Position = UDim2.new(0, 0, 1, -35)
+RefreshBtn.Size = UDim2.new(0, 540, 0, 28)
+RefreshBtn.Position = UDim2.new(0, 10, 1, -35)
 RefreshBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
 RefreshBtn.Text = "🔄 Refresh Player List"
 RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 RefreshBtn.TextSize = 12
 RefreshBtn.Font = Enum.Font.GothamBold
 RefreshBtn.BorderSizePixel = 0
-RefreshBtn.Parent = BlacklistCol
+RefreshBtn.Parent = BlacklistTab
 
 local rbc = Instance.new("UICorner")
 rbc.CornerRadius = UDim.new(0, 4)
@@ -878,10 +831,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v16.1",
+        Title = "⚡ RyzHub v17.0",
         Text = "Loaded on Xeno! by mikey",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v16.1 Loaded successfully on Xeno!")
+print("[RyzHub] v17.0 Loaded successfully on Xeno!")
