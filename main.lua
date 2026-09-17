@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v19.0 (No MainFrame - 100% Xeno)
+-- ⚡ RYZHUB | v20.0 (No Background - 100% Xeno)
 -- by mikey
 -- ============================================================
 
@@ -44,7 +44,7 @@ local function IsBlacklisted(player)
 end
 
 -- ============================================================
--- 2. الواجهة (بدون أي إطار)
+-- 2. الواجهة (بدون أي خلفية)
 -- ============================================================
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -54,32 +54,13 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = PlayerGui
 
--- خلفية الواجهة (إطار لكن بدون احتواء العناصر)
-local Background = Instance.new("Frame")
-Background.Size = UDim2.new(0, 580, 0, 460)
-Background.Position = UDim2.new(0.5, -290, 0.5, -230)
-Background.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-Background.BorderSizePixel = 0
-Background.Active = true
-Background.Draggable = true
-Background.Parent = ScreenGui
-Background.ZIndex = 1
-
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 6)
-corner.Parent = Background
-
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(80, 80, 90)
-stroke.Thickness = 1
-stroke.Parent = Background
-
--- شريط التبويبات
+-- شريط التبويبات (بدون خلفية تحته)
 local TabBar = Instance.new("Frame")
-TabBar.Size = UDim2.new(1, 0, 0, 30)
+TabBar.Size = UDim2.new(0, 580, 0, 30)
+TabBar.Position = UDim2.new(0.5, -290, 0.5, -230)
 TabBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 TabBar.BorderSizePixel = 0
-TabBar.Parent = Background
+TabBar.Parent = ScreenGui
 TabBar.ZIndex = 2
 
 local tbc = Instance.new("UICorner")
@@ -87,7 +68,7 @@ tbc.CornerRadius = UDim.new(0, 6)
 tbc.Parent = TabBar
 
 -- ============================================================
--- 3. نظام التبويبات (بدون حاويات)
+-- 3. نظام التبويبات
 -- ============================================================
 local currentTab = "Combat"
 local tabButtons = {}
@@ -152,28 +133,25 @@ CreateTabButton("Blacklist", 360)
 
 -- حقوق mikey
 local Credits = Instance.new("TextLabel")
-Credits.Size = UDim2.new(1, 0, 0, 20)
-Credits.Position = UDim2.new(0, 0, 1, -22)
+Credits.Size = UDim2.new(0, 580, 0, 20)
+Credits.Position = UDim2.new(0.5, -290, 0.5, 230)
 Credits.BackgroundTransparency = 1
 Credits.Text = "⚡ RyzHub | Made by mikey ⚡"
 Credits.TextColor3 = Color3.fromRGB(150, 150, 150)
 Credits.TextSize = 10
 Credits.Font = Enum.Font.GothamItalic
-Credits.Parent = Background
+Credits.Parent = ScreenGui
 Credits.ZIndex = 2
 
 -- ============================================================
 -- 4. دوال مساعدة (العناصر مباشرة في ScreenGui)
 -- ============================================================
-local BASE_X = Background.AbsolutePosition.X
-local BASE_Y = Background.AbsolutePosition.Y
-
 local function CreateCheckbox(tab, text, xPos, yPos, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 250, 0, 22)
-    frame.Position = UDim2.new(0, xPos, 0, yPos)
+    frame.Position = UDim2.new(0.5, -290 + xPos, 0.5, -200 + yPos)
     frame.BackgroundTransparency = 1
-    frame.Parent = Background
+    frame.Parent = ScreenGui
     frame.ZIndex = 3
     RegisterElement(tab, frame)
     
@@ -218,9 +196,9 @@ end
 local function CreateSlider(tab, text, minVal, maxVal, default, xPos, yPos, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 250, 0, 30)
-    frame.Position = UDim2.new(0, xPos, 0, yPos)
+    frame.Position = UDim2.new(0.5, -290 + xPos, 0.5, -200 + yPos)
     frame.BackgroundTransparency = 1
-    frame.Parent = Background
+    frame.Parent = ScreenGui
     frame.ZIndex = 3
     RegisterElement(tab, frame)
     
@@ -333,14 +311,14 @@ end)
 
 local keyLabel = Instance.new("TextLabel")
 keyLabel.Size = UDim2.new(0, 250, 0, 20)
-keyLabel.Position = UDim2.new(0, 10, 0, 75)
+keyLabel.Position = UDim2.new(0.5, -290 + 10, 0.5, -200 + 75)
 keyLabel.BackgroundTransparency = 1
 keyLabel.Text = "Select Key to Press:"
 keyLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
 keyLabel.TextSize = 12
 keyLabel.Font = Enum.Font.GothamBold
 keyLabel.TextXAlignment = Enum.TextXAlignment.Left
-keyLabel.Parent = Background
+keyLabel.Parent = ScreenGui
 keyLabel.ZIndex = 3
 RegisterElement("AHK", keyLabel)
 
@@ -348,14 +326,14 @@ local keyButtons = {}
 local function CreateKeyButton(text, xPos, yPos, keyName)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 45, 0, 28)
-    btn.Position = UDim2.new(0, xPos, 0, yPos)
+    btn.Position = UDim2.new(0.5, -290 + xPos, 0.5, -200 + yPos)
     btn.BackgroundColor3 = (Config.SoruKey == keyName) and Color3.fromRGB(100, 50, 180) or Color3.fromRGB(35, 35, 45)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(220, 220, 240)
     btn.TextSize = 13
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
-    btn.Parent = Background
+    btn.Parent = ScreenGui
     btn.ZIndex = 3
     RegisterElement("AHK", btn)
     
@@ -394,14 +372,14 @@ local function RefreshPlayerList()
         if p ~= LocalPlayer then
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(0, 540, 0, 26)
-            btn.Position = UDim2.new(0, 10, 0, y)
+            btn.Position = UDim2.new(0.5, -290 + 10, 0.5, -200 + y)
             btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
             btn.Text = (Blacklist[p.Name] and "🚫 " or "✅ ") .. p.Name
             btn.TextColor3 = Blacklist[p.Name] and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(100, 255, 100)
             btn.TextSize = 12
             btn.Font = Enum.Font.Gotham
             btn.BorderSizePixel = 0
-            btn.Parent = Background
+            btn.Parent = ScreenGui
             btn.ZIndex = 3
             RegisterElement("Blacklist", btn)
             table.insert(blacklistButtons, btn)
@@ -431,14 +409,14 @@ RefreshPlayerList()
 
 local RefreshBtn = Instance.new("TextButton")
 RefreshBtn.Size = UDim2.new(0, 540, 0, 28)
-RefreshBtn.Position = UDim2.new(0, 10, 1, -35)
+RefreshBtn.Position = UDim2.new(0.5, -290 + 10, 0.5, 200 - 35)
 RefreshBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
 RefreshBtn.Text = "🔄 Refresh Player List"
 RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 RefreshBtn.TextSize = 12
 RefreshBtn.Font = Enum.Font.GothamBold
 RefreshBtn.BorderSizePixel = 0
-RefreshBtn.Parent = Background
+RefreshBtn.Parent = ScreenGui
 RefreshBtn.ZIndex = 3
 RegisterElement("Blacklist", RefreshBtn)
 
@@ -492,7 +470,13 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 FloatingBtn.MouseButton1Click:Connect(function()
-    Background.Visible = not Background.Visible
+    TabBar.Visible = not TabBar.Visible
+    for _, elements in pairs(tabElements) do
+        for _, el in ipairs(elements) do
+            el.Visible = not el.Visible
+        end
+    end
+    Credits.Visible = not Credits.Visible
 end)
 
 -- ============================================================
@@ -800,7 +784,13 @@ UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
     if input.KeyCode == Enum.KeyCode.F4 then
-        Background.Visible = not Background.Visible
+        TabBar.Visible = not TabBar.Visible
+        for _, elements in pairs(tabElements) do
+            for _, el in ipairs(elements) do
+                el.Visible = not el.Visible
+            end
+        end
+        Credits.Visible = not Credits.Visible
         FloatingBtn.Visible = not FloatingBtn.Visible
     end
     
@@ -833,10 +823,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v19.0",
-        Text = "Loaded! No MainFrame - Xeno 100%",
+        Title = "⚡ RyzHub v20.0",
+        Text = "Loaded! No Background - Xeno 100%",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v19.0 Loaded successfully! No MainFrame.")
+print("[RyzHub] v20.0 Loaded successfully! No Background.")
