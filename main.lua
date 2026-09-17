@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v22.0 (No Containers - Xeno Final)
+-- ⚡ RYZHUB | v23.0 (Final Xeno Build)
 -- by mikey
 -- ============================================================
 
@@ -46,7 +46,7 @@ local function IsBlacklisted(player)
 end
 
 -- ============================================================
--- 2. الواجهة (كل شيء في ScreenGui)
+-- 2. الواجهة
 -- ============================================================
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -55,6 +55,40 @@ ScreenGui.Name = "RyzHubUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = PlayerGui
+
+-- خلفية شفافة
+local Background = Instance.new("Frame")
+Background.Size = UDim2.new(0, 580, 0, 420)
+Background.Position = UDim2.new(0.5, -290, 0.5, -210)
+Background.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+Background.BackgroundTransparency = 0.1
+Background.BorderSizePixel = 0
+Background.Active = true
+Background.Draggable = true
+Background.Parent = ScreenGui
+Background.ZIndex = 1
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = Background
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(100, 50, 180)
+stroke.Thickness = 1
+stroke.Parent = Background
+
+-- العنوان
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "⚡ RYZHUB | by mikey"
+Title.TextColor3 = Color3.fromRGB(153, 68, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Position = UDim2.new(0, 15, 0, 5)
+Title.Parent = Background
+Title.ZIndex = 2
 
 -- ============================================================
 -- 3. نظام التبويبات
@@ -81,7 +115,7 @@ local function SwitchTab(tabName)
     for name, btn in pairs(tabButtons) do
         if name == tabName then
             btn.TextColor3 = Color3.fromRGB(220, 220, 240)
-            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            btn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
         else
             btn.TextColor3 = Color3.fromRGB(180, 180, 190)
             btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
@@ -96,16 +130,20 @@ end
 
 local function CreateTabButton(name, xPos)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 90, 0, 30)
-    btn.Position = UDim2.new(0.5, -290 + xPos, 0.5, -230)
+    btn.Size = UDim2.new(0, 90, 0, 28)
+    btn.Position = UDim2.new(0, xPos, 0, 45)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(180, 180, 190)
     btn.TextSize = 12
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
-    btn.Parent = ScreenGui
+    btn.Parent = Background
     btn.ZIndex = 2
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 4)
+    c.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
         SwitchTab(name)
@@ -114,22 +152,22 @@ local function CreateTabButton(name, xPos)
     tabButtons[name] = btn
 end
 
-CreateTabButton("Combat", 0)
-CreateTabButton("ESP", 90)
-CreateTabButton("Misc", 180)
-CreateTabButton("AHK", 270)
-CreateTabButton("Blacklist", 360)
+CreateTabButton("Combat", 10)
+CreateTabButton("ESP", 105)
+CreateTabButton("Misc", 200)
+CreateTabButton("AHK", 295)
+CreateTabButton("Blacklist", 390)
 
 -- حقوق mikey
 local Credits = Instance.new("TextLabel")
-Credits.Size = UDim2.new(0, 580, 0, 20)
-Credits.Position = UDim2.new(0.5, -290, 0.5, 230)
+Credits.Size = UDim2.new(1, 0, 0, 20)
+Credits.Position = UDim2.new(0, 0, 1, -25)
 Credits.BackgroundTransparency = 1
 Credits.Text = "⚡ RyzHub | Made by mikey ⚡"
 Credits.TextColor3 = Color3.fromRGB(150, 150, 150)
 Credits.TextSize = 10
 Credits.Font = Enum.Font.GothamItalic
-Credits.Parent = ScreenGui
+Credits.Parent = Background
 Credits.ZIndex = 2
 
 -- ============================================================
@@ -138,9 +176,9 @@ Credits.ZIndex = 2
 local function CreateCheckbox(tab, text, xPos, yPos, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 250, 0, 22)
-    frame.Position = UDim2.new(0.5, -290 + xPos, 0.5, -200 + yPos)
+    frame.Position = UDim2.new(0, xPos, 0, yPos)
     frame.BackgroundTransparency = 1
-    frame.Parent = ScreenGui
+    frame.Parent = Background
     frame.ZIndex = 3
     RegisterElement(tab, frame)
     
@@ -185,9 +223,9 @@ end
 local function CreateSlider(tab, text, minVal, maxVal, default, xPos, yPos, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, 250, 0, 30)
-    frame.Position = UDim2.new(0.5, -290 + xPos, 0.5, -200 + yPos)
+    frame.Position = UDim2.new(0, xPos, 0, yPos)
     frame.BackgroundTransparency = 1
-    frame.Parent = ScreenGui
+    frame.Parent = Background
     frame.ZIndex = 3
     RegisterElement(tab, frame)
     
@@ -263,45 +301,45 @@ end
 -- ============================================================
 -- 5. تبويب Combat
 -- ============================================================
-CreateCheckbox("Combat", "Silent Aim", 10, 45, function(v) Config.SilentAim = v end)
-CreateCheckbox("Combat", "Aimlock", 10, 72, function(v) Config.Aimlock = v end)
-CreateCheckbox("Combat", "Mouse Lock", 10, 99, function(v) Config.MouseLock = v end)
-CreateCheckbox("Combat", "Show FOV", 10, 126, function(v) Config.ShowFOV = v end)
-CreateCheckbox("Combat", "Auto Soru", 10, 153, function(v) Config.AutoSoru = v end)
+CreateCheckbox("Combat", "Silent Aim", 15, 85, function(v) Config.SilentAim = v end)
+CreateCheckbox("Combat", "Aimlock", 15, 112, function(v) Config.Aimlock = v end)
+CreateCheckbox("Combat", "Mouse Lock", 15, 139, function(v) Config.MouseLock = v end)
+CreateCheckbox("Combat", "Show FOV", 15, 166, function(v) Config.ShowFOV = v end)
+CreateCheckbox("Combat", "Auto Soru", 15, 193, function(v) Config.AutoSoru = v end)
 
-CreateSlider("Combat", "FOV Radius", 50, 500, 150, 280, 45, function(v) Config.FOVRadius = v end)
-CreateSlider("Combat", "Aim Range", 50, 500, 300, 280, 80, function(v) Config.AimRange = v end)
+CreateSlider("Combat", "FOV Radius", 50, 500, 150, 290, 85, function(v) Config.FOVRadius = v end)
+CreateSlider("Combat", "Aim Range", 50, 500, 300, 290, 120, function(v) Config.AimRange = v end)
 
 -- ============================================================
 -- 6. تبويب ESP
 -- ============================================================
-CreateCheckbox("ESP", "Enable ESP", 10, 45, function(v) Config.ESP = v end)
-CreateCheckbox("ESP", "ESP Distance", 10, 72, function(v) Config.ESPDistance = v end)
-CreateCheckbox("ESP", "ESP Health", 10, 99, function(v) Config.ESPHealth = v end)
+CreateCheckbox("ESP", "Enable ESP", 15, 85, function(v) Config.ESP = v end)
+CreateCheckbox("ESP", "ESP Distance", 15, 112, function(v) Config.ESPDistance = v end)
+CreateCheckbox("ESP", "ESP Health", 15, 139, function(v) Config.ESPHealth = v end)
 
 -- ============================================================
 -- 7. تبويب Misc
 -- ============================================================
-CreateCheckbox("Misc", "Speed Hack", 10, 45, function(v) Config.SpeedHack = v end)
-CreateCheckbox("Misc", "Fly", 10, 72, function(v) Config.Fly = v end)
-CreateSlider("Misc", "Speed", 16, 200, 16, 10, 100, function(v) Config.Speed = v end)
-CreateSlider("Misc", "Fly Speed", 10, 200, 50, 10, 135, function(v) Config.FlySpeed = v end)
+CreateCheckbox("Misc", "Speed Hack", 15, 85, function(v) Config.SpeedHack = v end)
+CreateCheckbox("Misc", "Fly", 15, 112, function(v) Config.Fly = v end)
+CreateSlider("Misc", "Speed", 16, 200, 16, 15, 140, function(v) Config.Speed = v end)
+CreateSlider("Misc", "Fly Speed", 10, 200, 50, 15, 175, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
 -- 8. تبويب AHK
 -- ============================================================
-CreateCheckbox("AHK", "Auto Soru AHK", 10, 45, function(v) Config.SoruAHK = v end)
+CreateCheckbox("AHK", "Auto Soru AHK", 15, 85, function(v) Config.SoruAHK = v end)
 
 local keyLabel = Instance.new("TextLabel")
 keyLabel.Size = UDim2.new(0, 250, 0, 20)
-keyLabel.Position = UDim2.new(0.5, -290 + 10, 0.5, -200 + 75)
+keyLabel.Position = UDim2.new(0, 15, 0, 115)
 keyLabel.BackgroundTransparency = 1
 keyLabel.Text = "Select Key to Press:"
 keyLabel.TextColor3 = Color3.fromRGB(200, 200, 210)
 keyLabel.TextSize = 12
 keyLabel.Font = Enum.Font.GothamBold
 keyLabel.TextXAlignment = Enum.TextXAlignment.Left
-keyLabel.Parent = ScreenGui
+keyLabel.Parent = Background
 keyLabel.ZIndex = 3
 RegisterElement("AHK", keyLabel)
 
@@ -309,14 +347,14 @@ local keyButtons = {}
 local function CreateKeyButton(text, xPos, yPos, keyName)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 45, 0, 28)
-    btn.Position = UDim2.new(0.5, -290 + xPos, 0.5, -200 + yPos)
+    btn.Position = UDim2.new(0, xPos, 0, yPos)
     btn.BackgroundColor3 = (Config.SoruKey == keyName) and Color3.fromRGB(100, 50, 180) or Color3.fromRGB(35, 35, 45)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(220, 220, 240)
     btn.TextSize = 13
     btn.Font = Enum.Font.GothamBold
     btn.BorderSizePixel = 0
-    btn.Parent = ScreenGui
+    btn.Parent = Background
     btn.ZIndex = 3
     RegisterElement("AHK", btn)
     
@@ -335,9 +373,9 @@ local function CreateKeyButton(text, xPos, yPos, keyName)
     table.insert(keyButtons, btn)
 end
 
-CreateKeyButton("Z", 10, 105, "Z")
-CreateKeyButton("X", 60, 105, "X")
-CreateKeyButton("C", 110, 105, "C")
+CreateKeyButton("Z", 15, 145, "Z")
+CreateKeyButton("X", 65, 145, "X")
+CreateKeyButton("C", 115, 145, "C")
 
 -- ============================================================
 -- 9. تبويب Blacklist
@@ -350,19 +388,19 @@ local function RefreshPlayerList()
     end
     blacklistButtons = {}
     
-    local y = 45
+    local y = 85
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(0, 540, 0, 26)
-            btn.Position = UDim2.new(0.5, -290 + 10, 0.5, -200 + y)
+            btn.Position = UDim2.new(0, 15, 0, y)
             btn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
             btn.Text = (Blacklist[p.Name] and "🚫 " or "✅ ") .. p.Name
             btn.TextColor3 = Blacklist[p.Name] and Color3.fromRGB(255, 100, 100) or Color3.fromRGB(100, 255, 100)
             btn.TextSize = 12
             btn.Font = Enum.Font.Gotham
             btn.BorderSizePixel = 0
-            btn.Parent = ScreenGui
+            btn.Parent = Background
             btn.ZIndex = 3
             RegisterElement("Blacklist", btn)
             table.insert(blacklistButtons, btn)
@@ -389,25 +427,6 @@ local function RefreshPlayerList()
 end
 
 RefreshPlayerList()
-
-local RefreshBtn = Instance.new("TextButton")
-RefreshBtn.Size = UDim2.new(0, 540, 0, 28)
-RefreshBtn.Position = UDim2.new(0.5, -290 + 10, 0.5, 200 - 35)
-RefreshBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
-RefreshBtn.Text = "🔄 Refresh Player List"
-RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-RefreshBtn.TextSize = 12
-RefreshBtn.Font = Enum.Font.GothamBold
-RefreshBtn.BorderSizePixel = 0
-RefreshBtn.Parent = ScreenGui
-RefreshBtn.ZIndex = 3
-RegisterElement("Blacklist", RefreshBtn)
-
-local rbc = Instance.new("UICorner")
-rbc.CornerRadius = UDim.new(0, 4)
-rbc.Parent = RefreshBtn
-
-RefreshBtn.MouseButton1Click:Connect(RefreshPlayerList)
 
 -- ============================================================
 -- 10. Floating Button
@@ -453,15 +472,7 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 FloatingBtn.MouseButton1Click:Connect(function()
-    for _, elements in pairs(tabElements) do
-        for _, el in ipairs(elements) do
-            el.Visible = not el.Visible
-        end
-    end
-    for _, btn in pairs(tabButtons) do
-        btn.Visible = not btn.Visible
-    end
-    Credits.Visible = not Credits.Visible
+    Background.Visible = not Background.Visible
 end)
 
 -- ============================================================
@@ -796,16 +807,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     
     if input.KeyCode == Enum.KeyCode.F4 then
-        for _, elements in pairs(tabElements) do
-            for _, el in ipairs(elements) do
-                el.Visible = not el.Visible
-            end
-        end
-        for _, btn in pairs(tabButtons) do
-            btn.Visible = not btn.Visible
-        end
-        Credits.Visible = not Credits.Visible
-        FloatingBtn.Visible = not FloatingBtn.Visible
+        Background.Visible = not Background.Visible
     end
     
     if input.KeyCode == Enum.KeyCode.F7 then
@@ -840,10 +842,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v22.0",
+        Title = "⚡ RyzHub v23.0",
         Text = "Loaded! by mikey",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v22.0 Loaded successfully!")
+print("[RyzHub] v23.0 Loaded successfully! by mikey")
