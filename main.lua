@@ -755,4 +755,133 @@ UserInputService.InputBegan:Connect(function(input, processed)
                         elseif key == "X" then
                             game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.X, false, game)
                             game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.X, false, game)
-                        elseif key == "C"
+                        elseif key == "C" then
+                            game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.C, false, game)
+                            game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.C, false, game)
+                        end
+                    end)
+                    print("[RyzHub] Soru AHK → " .. targetPlayer.Name)
+                end
+            end
+        end
+    end
+end)
+
+-- ============================================================
+-- 17. FOV Circle Update
+-- ============================================================
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.ShowFOV and FOVFrame then
+            FOVFrame.Visible = true
+            local mouse = UserInputService:GetMouseLocation()
+            FOVFrame.Position = UDim2.new(0, mouse.X - Config.FOVRadius, 0, mouse.Y - Config.FOVRadius)
+            FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
+        elseif FOVFrame then
+            FOVFrame.Visible = false
+        end
+    end)
+end)
+
+-- ============================================================
+-- 18. Noclip + ESP
+-- ============================================================
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        pcall(function()
+            if Config.Noclip then
+                local char = LocalPlayer.Character
+                if char then
+                    for _, part in ipairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end
+            
+            if Config.ESP then
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if not IsBlacklisted(p) and p.Character then
+                        CreateESP(p)
+                    end
+                end
+                for player, data in pairs(espCache) do
+                    if IsBlacklisted(player) or not player.Character then
+                        RemoveESP(player)
+                    end
+                end
+            else
+                for player, data in pairs(espCache) do
+                    RemoveESP(player)
+                end
+            end
+        end)
+        task.wait(0.3)
+    end
+end)
+
+-- ============================================================
+-- 19. Silent Aim + Aimlock
+-- ============================================================
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if Config.SilentAim or Config.Aimlock then
+            local closest = GetClosestEnemy()
+            if closest and closest.Character then
+                local targetPart = closest.Character:FindFirstChild("Head")
+                if targetPart then
+                    Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
+                end
+            end
+        end
+    end)
+end)
+
+-- ============================================================
+-- 20. F4 (إخفاء) + F7 (إغلاق)
+-- ============================================================
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    
+    if input.KeyCode == Enum.KeyCode.F4 then
+        MainFrame.Visible = not MainFrame.Visible
+        FloatingBtn.Visible = not FloatingBtn.Visible
+    end
+    
+    if input.KeyCode == Enum.KeyCode.F7 then
+        Config.SilentAim = false
+        Config.ESP = false
+        Config.ShowFOV = false
+        Config.Noclip = false
+        Config.AutoFlash = false
+        Config.Aimlock = false
+        Config.Fly = false
+        Config.SoruAHK = false
+        
+        for player, data in pairs(espCache) do
+            RemoveESP(player)
+        end
+        
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+        
+        if FlashBoxPart then FlashBoxPart:Destroy() end
+        if ScreenGui then ScreenGui:Destroy() end
+        getgenv().RyzHubLoaded = false
+    end
+end)
+
+-- ============================================================
+-- 21. إشعار
+-- ============================================================
+pcall(function()
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "⚡ RyzHub v16.1",
+        Text = "Loaded on Xeno! by mikey",
+        Duration = 5
+    })
+end)
+
+print("[RyzHub] v16.1 Loaded successfully on Xeno!")
