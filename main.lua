@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v14.1 (Big Red Flash Target Box + AHK + R Trigger)
+-- ⚡ RYZHUB | v14.1 (Silent Aim + Mouse Lock + AHK + R Trigger)
 -- by mikey
 -- ============================================================
 
@@ -24,6 +24,7 @@ local Config = {
     Noclip = false,
     AutoFlash = false,
     Aimlock = false,
+    MouseLock = false,
     Fly = false,
     Hitbox = false,
     SmartAutoV3 = false,
@@ -32,7 +33,6 @@ local Config = {
     AimRange = 300,
     Speed = 16,
     FlySpeed = 50,
-    -- Soru AHK
     SoruAHK = false,
     SoruKey = "Z",
 }
@@ -282,9 +282,9 @@ end
 local CombatCol1 = CreateSection(CombatTab, "Combat Skills", 10, 5, 250)
 CreateCheckbox(CombatCol1, "Silent Aim", 30, function(v) Config.SilentAim = v end)
 CreateCheckbox(CombatCol1, "Aimlock", 55, function(v) Config.Aimlock = v end)
-CreateCheckbox(CombatCol1, "Auto Flash (Click Target)", 80, function(v) Config.AutoFlash = v end)
-CreateCheckbox(CombatCol1, "Hitbox System", 105, function(v) Config.Hitbox = v end)
-CreateCheckbox(CombatCol1, "Smart Auto V3", 130, function(v) Config.SmartAutoV3 = v end)
+CreateCheckbox(CombatCol1, "Mouse Lock", 80, function(v) Config.MouseLock = v end)
+CreateCheckbox(CombatCol1, "Auto Flash (Click Target)", 105, function(v) Config.AutoFlash = v end)
+CreateCheckbox(CombatCol1, "Hitbox System", 130, function(v) Config.Hitbox = v end)
 
 local CombatCol2 = CreateSection(CombatTab, "Targeting", 280, 5, 250)
 CreateSlider(CombatCol2, "FOV Radius", 50, 500, 150, 30, function(v) Config.FOVRadius = v end)
@@ -528,7 +528,6 @@ local flashCorner = Instance.new("UICorner")
 flashCorner.CornerRadius = UDim.new(0, 15)
 flashCorner.Parent = flashBox
 
--- متغير لتتبع ما إذا كان الماوس داخل المربع
 local mouseInBox = false
 
 flashBox.MouseEnter:Connect(function()
@@ -704,26 +703,18 @@ UserInputService.InputBegan:Connect(function(input, processed)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local myChar = LocalPlayer.Character
                 if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                    -- 1. القفز
                     pcall(function()
                         game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Space, false, game)
                         task.wait(0.05)
                         game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Space, false, game)
                     end)
-                    
                     task.wait(0.1)
-                    
-                    -- 2. تنفيذ Flash Step
                     pcall(function()
                         game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
                         task.wait(0.05)
                         game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
                     end)
-                    
-                    -- 3. الانتقال نحو الهدف
                     myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
-                    
-                    -- 4. الضغط على زر Soru AHK المختار
                     local key = Config.SoruKey
                     pcall(function()
                         if key == "Z" then
@@ -737,7 +728,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
                             game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.C, false, game)
                         end
                     end)
-                    
                     print("[RyzHub] Flash Step (Mouse in Box) → " .. targetPlayer.Name .. " | Key: " .. key)
                 end
             end
@@ -800,7 +790,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 19. Silent Aim + Aimlock
+-- 19. Silent Aim + Aimlock + Mouse Lock
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -810,6 +800,26 @@ RunService.RenderStepped:Connect(function()
                 local targetPart = closest.Character:FindFirstChild("Head")
                 if targetPart then
                     Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, targetPart.Position)
+                end
+            end
+        end
+        
+        -- Mouse Lock (يستخدم mousemoverel إذا كان مدعوماً)
+        if Config.MouseLock then
+            local closest = GetClosestEnemy()
+            if closest and closest.Character then
+                local targetPart = closest.Character:FindFirstChild("Head")
+                if targetPart then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                    if onScreen then
+                        pcall(function()
+                            local mouse = LocalPlayer:GetMouse()
+                            if mousemoverel then
+                                local currentX, currentY = mouse.X, mouse.Y
+                                mousemoverel(screenPos.X - currentX, screenPos.Y - currentY)
+                            end
+                        end)
+                    end
                 end
             end
         end
@@ -836,6 +846,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
         Config.Aimlock = false
         Config.Fly = false
         Config.SoruAHK = false
+        Config.MouseLock = false
         
         for player, data in pairs(espCache) do
             RemoveESP(player)
@@ -855,10 +866,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v14.1 + AHK + R Trigger",
-        Text = "Big Red Flash Target + Soru AHK + R Trigger Loaded!",
+        Title = "⚡ RyzHub v14.1 + AHK + Silent Aim",
+        Text = "Loaded! by mikey",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v14.1 + AHK + R Trigger Loaded successfully!")
+print("[RyzHub] v14.1 + AHK + Silent Aim + Mouse Lock Loaded successfully!")
