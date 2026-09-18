@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v14.1 (Big Red Flash Target Box) + AHK
+-- ⚡ RYZHUB | v14.1 (Big Red Flash Target Box + AHK + R Trigger)
 -- by mikey
 -- ============================================================
 
@@ -32,7 +32,7 @@ local Config = {
     AimRange = 300,
     Speed = 16,
     FlySpeed = 50,
-    -- Soru AHK (إضافة جديدة)
+    -- Soru AHK
     SoruAHK = false,
     SoruKey = "Z",
 }
@@ -313,7 +313,7 @@ CreateCheckbox(MiscCol1, "Fly", 90, function(v) Config.Fly = v end)
 CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 115, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
--- 7. تبويب AHK (Soru AHK) - الإضافة الجديدة
+-- 7. تبويب AHK (Soru AHK)
 -- ============================================================
 local AHKCol = CreateSection(AHKTab, "Soru AHK Settings", 10, 5, 520)
 
@@ -528,7 +528,11 @@ local flashCorner = Instance.new("UICorner")
 flashCorner.CornerRadius = UDim.new(0, 15)
 flashCorner.Parent = flashBox
 
+-- متغير لتتبع ما إذا كان الماوس داخل المربع
+local mouseInBox = false
+
 flashBox.MouseEnter:Connect(function()
+    mouseInBox = true
     flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     flashBox.BackgroundTransparency = 0.3
     flashBox.BorderColor3 = Color3.fromRGB(255, 255, 255)
@@ -536,29 +540,11 @@ flashBox.MouseEnter:Connect(function()
 end)
 
 flashBox.MouseLeave:Connect(function()
+    mouseInBox = false
     flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     flashBox.BackgroundTransparency = 0.6
     flashBox.BorderColor3 = Color3.fromRGB(255, 0, 0)
     flashBox.BorderSizePixel = 4
-end)
-
-flashBox.MouseButton1Click:Connect(function()
-    local target = flashBox:GetAttribute("TargetPlayer")
-    if target then
-        local targetPlayer = Players:FindFirstChild(target)
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local myChar = LocalPlayer.Character
-            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
-                myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
-                pcall(function()
-                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
-                    task.wait(0.05)
-                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
-                end)
-                print("[RyzHub] Flash Step → " .. targetPlayer.Name)
-            end
-        end
-    end
 end)
 
 -- ============================================================
@@ -707,29 +693,37 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 16. Soru AHK Logic (عند الضغط على R)
+-- 16. R Trigger (عند الضغط على R مع الماوس داخل المربع)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
-    if input.KeyCode == Enum.KeyCode.R and Config.SoruAHK then
+    if input.KeyCode == Enum.KeyCode.R and mouseInBox then
         local target = flashBox:GetAttribute("TargetPlayer")
         if target then
             local targetPlayer = Players:FindFirstChild(target)
             if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 local myChar = LocalPlayer.Character
                 if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                    -- 1. القفز
                     pcall(function()
                         game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Space, false, game)
                         task.wait(0.05)
                         game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Space, false, game)
                     end)
+                    
                     task.wait(0.1)
+                    
+                    -- 2. تنفيذ Flash Step
                     pcall(function()
                         game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
                         task.wait(0.05)
                         game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
                     end)
+                    
+                    -- 3. الانتقال نحو الهدف
                     myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                    
+                    -- 4. الضغط على زر Soru AHK المختار
                     local key = Config.SoruKey
                     pcall(function()
                         if key == "Z" then
@@ -743,7 +737,8 @@ UserInputService.InputBegan:Connect(function(input, processed)
                             game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.C, false, game)
                         end
                     end)
-                    print("[RyzHub] Soru AHK → " .. targetPlayer.Name)
+                    
+                    print("[RyzHub] Flash Step (Mouse in Box) → " .. targetPlayer.Name .. " | Key: " .. key)
                 end
             end
         end
@@ -860,10 +855,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v14.1 + AHK",
-        Text = "Big Red Flash Target + Soru AHK Loaded!",
+        Title = "⚡ RyzHub v14.1 + AHK + R Trigger",
+        Text = "Big Red Flash Target + Soru AHK + R Trigger Loaded!",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v14.1 + AHK Loaded successfully!")
+print("[RyzHub] v14.1 + AHK + R Trigger Loaded successfully!")
