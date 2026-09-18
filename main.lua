@@ -1,5 +1,5 @@
 -- ============================================================
--- ⚡ RYZHUB | v14.1 (Silent Aim + Mouse Lock + AHK + R Trigger)
+-- ⚡ RYZHUB | v15.0 (HUD + Buttons + Soru Button)
 -- by mikey
 -- ============================================================
 
@@ -33,6 +33,7 @@ local Config = {
     AimRange = 300,
     Speed = 16,
     FlySpeed = 50,
+    FlashDistance = 20,
     SoruAHK = false,
     SoruKey = "Z",
 }
@@ -47,7 +48,7 @@ local function IsBlacklisted(player)
 end
 
 -- ============================================================
--- 2. الواجهة
+-- 2. الواجهة الرئيسية
 -- ============================================================
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -289,7 +290,8 @@ CreateCheckbox(CombatCol1, "Hitbox System", 130, function(v) Config.Hitbox = v e
 local CombatCol2 = CreateSection(CombatTab, "Targeting", 280, 5, 250)
 CreateSlider(CombatCol2, "FOV Radius", 50, 500, 150, 30, function(v) Config.FOVRadius = v end)
 CreateSlider(CombatCol2, "Aim Range", 50, 500, 300, 65, function(v) Config.AimRange = v end)
-CreateCheckbox(CombatCol2, "Show FOV", 100, function(v) Config.ShowFOV = v end)
+CreateSlider(CombatCol2, "Flash Distance", 5, 100, 20, 100, function(v) Config.FlashDistance = v end)
+CreateCheckbox(CombatCol2, "Show FOV", 135, function(v) Config.ShowFOV = v end)
 
 -- ============================================================
 -- 5. تبويب ESP
@@ -313,13 +315,13 @@ CreateCheckbox(MiscCol1, "Fly", 90, function(v) Config.Fly = v end)
 CreateSlider(MiscCol1, "Fly Speed", 10, 200, 50, 115, function(v) Config.FlySpeed = v end)
 
 -- ============================================================
--- 7. تبويب AHK (Soru AHK)
+-- 7. تبويب AHK
 -- ============================================================
 local AHKCol = CreateSection(AHKTab, "Soru AHK Settings", 10, 5, 520)
 
-CreateCheckbox(AHKCol, "Enable Soru AHK (Press R)", 30, function(v) 
+CreateCheckbox(AHKCol, "Enable Auto Soru", 30, function(v) 
     Config.SoruAHK = v 
-    print("[RyzHub] Soru AHK: " .. tostring(v))
+    print("[RyzHub] Auto Soru: " .. tostring(v))
 end)
 
 local keyLabel = Instance.new("TextLabel")
@@ -440,54 +442,7 @@ rbc.Parent = RefreshBtn
 RefreshBtn.MouseButton1Click:Connect(RefreshPlayerList)
 
 -- ============================================================
--- 9. Floating Button
--- ============================================================
-local FloatingBtn = Instance.new("TextButton")
-FloatingBtn.Size = UDim2.new(0, 50, 0, 50)
-FloatingBtn.Position = UDim2.new(0, 20, 0.5, -25)
-FloatingBtn.BackgroundColor3 = Color3.fromRGB(153, 68, 255)
-FloatingBtn.Text = "⚡"
-FloatingBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-FloatingBtn.TextSize = 24
-FloatingBtn.Font = Enum.Font.GothamBold
-FloatingBtn.BorderSizePixel = 0
-FloatingBtn.ZIndex = 1000
-FloatingBtn.Parent = ScreenGui
-
-local fbc = Instance.new("UICorner")
-fbc.CornerRadius = UDim.new(1, 0)
-fbc.Parent = FloatingBtn
-
-local dragging = false
-local dragStart, startPos
-
-FloatingBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = FloatingBtn.Position
-    end
-end)
-
-FloatingBtn.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        FloatingBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-FloatingBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
-
--- ============================================================
--- 10. FOV Circle
+-- 9. FOV Circle
 -- ============================================================
 local FOVFrame = Instance.new("Frame")
 FOVFrame.Size = UDim2.new(0, Config.FOVRadius * 2, 0, Config.FOVRadius * 2)
@@ -507,7 +462,7 @@ fovStroke.Thickness = 2
 fovStroke.Parent = FOVFrame
 
 -- ============================================================
--- 11. Flash Target Box (كبير - 200x200)
+-- 10. Flash Target Box
 -- ============================================================
 local flashBox = Instance.new("TextButton")
 flashBox.Name = "FlashTargetBox"
@@ -532,7 +487,6 @@ local mouseInBox = false
 
 flashBox.MouseEnter:Connect(function()
     mouseInBox = true
-    flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     flashBox.BackgroundTransparency = 0.3
     flashBox.BorderColor3 = Color3.fromRGB(255, 255, 255)
     flashBox.BorderSizePixel = 6
@@ -540,14 +494,13 @@ end)
 
 flashBox.MouseLeave:Connect(function()
     mouseInBox = false
-    flashBox.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     flashBox.BackgroundTransparency = 0.6
     flashBox.BorderColor3 = Color3.fromRGB(255, 0, 0)
     flashBox.BorderSizePixel = 4
 end)
 
 -- ============================================================
--- 12. ESP
+-- 11. ESP
 -- ============================================================
 local espCache = {}
 
@@ -598,7 +551,7 @@ local function RemoveESP(player)
 end
 
 -- ============================================================
--- 13. GetClosestEnemy
+-- 12. GetClosestEnemy
 -- ============================================================
 local function GetClosestEnemy()
     local closest = nil
@@ -622,7 +575,7 @@ local function GetClosestEnemy()
 end
 
 -- ============================================================
--- 14. Fly
+-- 13. Fly
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -665,7 +618,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 15. Auto Flash Step Box Update
+-- 14. Auto Flash Step Box Update
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -692,11 +645,11 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 16. R Trigger (عند الضغط على R مع الماوس داخل المربع)
+-- 15. R Trigger (Flash Step)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
-    if input.KeyCode == Enum.KeyCode.R and mouseInBox then
+    if input.KeyCode == Enum.KeyCode.R then
         local target = flashBox:GetAttribute("TargetPlayer")
         if target then
             local targetPlayer = Players:FindFirstChild(target)
@@ -709,12 +662,11 @@ UserInputService.InputBegan:Connect(function(input, processed)
                         game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Space, false, game)
                     end)
                     task.wait(0.1)
-                    pcall(function()
-                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.R, false, game)
-                        task.wait(0.05)
-                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.R, false, game)
-                    end)
-                    myChar.HumanoidRootPart.CFrame = CFrame.new(myChar.HumanoidRootPart.Position, targetPlayer.Character.HumanoidRootPart.Position)
+                    local targetPos = targetPlayer.Character.HumanoidRootPart.Position
+                    local myPos = myChar.HumanoidRootPart.Position
+                    local direction = (targetPos - myPos).Unit
+                    local flashPos = myPos + direction * Config.FlashDistance
+                    myChar.HumanoidRootPart.CFrame = CFrame.new(flashPos, targetPos)
                     local key = Config.SoruKey
                     pcall(function()
                         if key == "Z" then
@@ -728,7 +680,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
                             game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.C, false, game)
                         end
                     end)
-                    print("[RyzHub] Flash Step (Mouse in Box) → " .. targetPlayer.Name .. " | Key: " .. key)
                 end
             end
         end
@@ -736,7 +687,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 -- ============================================================
--- 17. FOV Circle Update
+-- 16. FOV Circle Update
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -752,7 +703,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
--- 18. Noclip + ESP
+-- 17. Noclip + ESP
 -- ============================================================
 task.spawn(function()
     while ScreenGui and ScreenGui.Parent do
@@ -790,7 +741,7 @@ task.spawn(function()
 end)
 
 -- ============================================================
--- 19. Silent Aim + Aimlock + Mouse Lock
+-- 18. Silent Aim + Aimlock + Mouse Lock
 -- ============================================================
 RunService.RenderStepped:Connect(function()
     pcall(function()
@@ -804,7 +755,6 @@ RunService.RenderStepped:Connect(function()
             end
         end
         
-        -- Mouse Lock (يستخدم mousemoverel إذا كان مدعوماً)
         if Config.MouseLock then
             local closest = GetClosestEnemy()
             if closest and closest.Character then
@@ -827,6 +777,170 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ============================================================
+-- 19. HUD (FPS + Ping + Buttons)
+-- ============================================================
+-- FPS Counter
+local fpsLabel = Instance.new("TextLabel")
+fpsLabel.Size = UDim2.new(0, 150, 0, 20)
+fpsLabel.Position = UDim2.new(0, 10, 0, 60)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.Text = "FPS: 60"
+fpsLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+fpsLabel.TextSize = 14
+fpsLabel.Font = Enum.Font.GothamBold
+fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+fpsLabel.Parent = ScreenGui
+fpsLabel.ZIndex = 10
+
+-- Ping Counter
+local pingLabel = Instance.new("TextLabel")
+pingLabel.Size = UDim2.new(0, 150, 0, 20)
+pingLabel.Position = UDim2.new(0, 10, 0, 80)
+pingLabel.BackgroundTransparency = 1
+pingLabel.Text = "Ping: 0 ms"
+pingLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+pingLabel.TextSize = 14
+pingLabel.Font = Enum.Font.GothamBold
+pingLabel.TextXAlignment = Enum.TextXAlignment.Left
+pingLabel.Parent = ScreenGui
+pingLabel.ZIndex = 10
+
+-- FPS Update
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        pcall(function()
+            local fps = math.floor(1 / RunService.RenderStepped:Wait())
+            fpsLabel.Text = "FPS: " .. fps
+        end)
+    end
+end)
+
+-- Ping Update
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        pcall(function()
+            local ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+            pingLabel.Text = "Ping: " .. ping .. " ms"
+        end)
+        task.wait(1)
+    end
+end)
+
+-- Menu Button
+local menuBtn = Instance.new("TextButton")
+menuBtn.Size = UDim2.new(0, 100, 0, 35)
+menuBtn.Position = UDim2.new(0, 10, 0, 110)
+menuBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+menuBtn.Text = "MENU"
+menuBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+menuBtn.TextSize = 14
+menuBtn.Font = Enum.Font.GothamBold
+menuBtn.BorderSizePixel = 0
+menuBtn.Parent = ScreenGui
+menuBtn.ZIndex = 10
+
+local menuCorner = Instance.new("UICorner")
+menuCorner.CornerRadius = UDim.new(0, 6)
+menuCorner.Parent = menuBtn
+
+menuBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- AIM ON/OFF Button
+local aimBtn = Instance.new("TextButton")
+aimBtn.Size = UDim2.new(0, 100, 0, 35)
+aimBtn.Position = UDim2.new(0, 10, 0, 155)
+aimBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+aimBtn.Text = "AIM OFF"
+aimBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+aimBtn.TextSize = 14
+aimBtn.Font = Enum.Font.GothamBold
+aimBtn.BorderSizePixel = 0
+aimBtn.Parent = ScreenGui
+aimBtn.ZIndex = 10
+
+local aimCorner = Instance.new("UICorner")
+aimCorner.CornerRadius = UDim.new(0, 6)
+aimCorner.Parent = aimBtn
+
+aimBtn.MouseButton1Click:Connect(function()
+    Config.SilentAim = not Config.SilentAim
+    if Config.SilentAim then
+        aimBtn.Text = "AIM ON"
+        aimBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        aimBtn.Text = "AIM OFF"
+        aimBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
+
+-- SORU Button
+local soruBtn = Instance.new("TextButton")
+soruBtn.Size = UDim2.new(0, 100, 0, 35)
+soruBtn.Position = UDim2.new(0, 10, 0, 200)
+soruBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+soruBtn.Text = "SORU"
+soruBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+soruBtn.TextSize = 14
+soruBtn.Font = Enum.Font.GothamBold
+soruBtn.BorderSizePixel = 0
+soruBtn.Parent = ScreenGui
+soruBtn.ZIndex = 10
+
+local soruCorner = Instance.new("UICorner")
+soruCorner.CornerRadius = UDim.new(0, 6)
+soruCorner.Parent = soruBtn
+
+soruBtn.MouseButton1Click:Connect(function()
+    if not Config.SoruAHK then
+        pcall(function()
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "⚠️ Auto Soru",
+                Text = "Please enable Auto Soru first!",
+                Duration = 2
+            })
+        end)
+        return
+    end
+    
+    local target = flashBox:GetAttribute("TargetPlayer")
+    if target then
+        local targetPlayer = Players:FindFirstChild(target)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local myChar = LocalPlayer.Character
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+                    task.wait(0.05)
+                    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+                end)
+                task.wait(0.1)
+                local targetPos = targetPlayer.Character.HumanoidRootPart.Position
+                local myPos = myChar.HumanoidRootPart.Position
+                local direction = (targetPos - myPos).Unit
+                local flashPos = myPos + direction * Config.FlashDistance
+                myChar.HumanoidRootPart.CFrame = CFrame.new(flashPos, targetPos)
+                local key = Config.SoruKey
+                pcall(function()
+                    if key == "Z" then
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.Z, false, game)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.Z, false, game)
+                    elseif key == "X" then
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.X, false, game)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.X, false, game)
+                    elseif key == "C" then
+                        game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.C, false, game)
+                        game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.C, false, game)
+                    end
+                end)
+                print("[RyzHub] SORU Button → " .. targetPlayer.Name)
+            end
+        end
+    end
+end)
+
+-- ============================================================
 -- 20. F4 (إخفاء) + F7 (إغلاق)
 -- ============================================================
 UserInputService.InputBegan:Connect(function(input, processed)
@@ -834,7 +948,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
     
     if input.KeyCode == Enum.KeyCode.F4 then
         MainFrame.Visible = not MainFrame.Visible
-        FloatingBtn.Visible = not FloatingBtn.Visible
     end
     
     if input.KeyCode == Enum.KeyCode.F7 then
@@ -866,10 +979,10 @@ end)
 -- ============================================================
 pcall(function()
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "⚡ RyzHub v14.1 + AHK + Silent Aim",
-        Text = "Loaded! by mikey",
+        Title = "⚡ RyzHub v15.0",
+        Text = "HUD + Buttons + SORU Button Loaded!",
         Duration = 5
     })
 end)
 
-print("[RyzHub] v14.1 + AHK + Silent Aim + Mouse Lock Loaded successfully!")
+print("[RyzHub] v15.0 Loaded successfully!")
